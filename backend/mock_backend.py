@@ -117,7 +117,7 @@ def calcular_costo_rango(kwh: float, nivel_subsidio: str, ubicacion: str = "Resi
     cargo_fijo = 2277.3100  # $/mes para Chaco
     costo_total_kwh = 0.0
 
-    # Urban tariffs
+
     tarifas_urbanas_n1 = [
         (50, 118.6888),
         (100, 126.6517),
@@ -139,7 +139,6 @@ def calcular_costo_rango(kwh: float, nivel_subsidio: str, ubicacion: str = "Resi
         (float('inf'), 163.8120)
     ]
 
-    # Rural tariffs
     tarifas_rurales = {
         "alto": [(float('inf'), 147.4494)], # Nivel 1 rural
         "bajo": [(350, 81.7632), (float('inf'), 147.4494)], # Nivel 2 rural
@@ -153,7 +152,7 @@ def calcular_costo_rango(kwh: float, nivel_subsidio: str, ubicacion: str = "Resi
         applied_tiers = []
         if "Rural" in ubicacion:
             applied_tiers = tarifas_rurales[nivel_subsidio]
-        else: # Urban
+        else: # urbano
             if nivel_subsidio == "bajo":
                 applied_tiers = tarifas_urbanas_n2
             elif nivel_subsidio == "medio":
@@ -171,34 +170,33 @@ def calcular_costo_rango(kwh: float, nivel_subsidio: str, ubicacion: str = "Resi
             
             current_rate = rate
 
-            # Apply seasonal bonification for Chaco urban
-            if "Rural" not in ubicacion: # Only apply urban specific bonifications
-                if is_summer: # Summer (Jan, Feb, Mar, Dec)
+            if "Rural" not in ubicacion: 
+                if is_summer: # vernao (Jan, Feb, Mar, Dec)
                     if kwh <= 300: # Up to 300 kWh/month
-                        current_rate *= (1 - 0.60) # 60% bonification
+                        current_rate *= (1 - 0.60) # 60% 
                     elif kwh <= 450: # 301 to 450 kWh/month
-                        current_rate *= (1 - 0.50) # 50% bonification
-                else: # Rest of the year (Apr-Nov)
+                        current_rate *= (1 - 0.50) # 50% 
+                else: 
                     if kwh <= 200: # Up to 200 kWh/month
-                        current_rate *= (1 - 0.60) # 60% bonification
+                        current_rate *= (1 - 0.60) # 60% 
                     elif kwh <= 300: # 201 to 300 kWh/month
-                        current_rate *= (1 - 0.50) # 50% bonification
+                        current_rate *= (1 - 0.50) # 50% 
 
             costo_total_kwh += consumed_in_block * current_rate
             remaining_kwh -= consumed_in_block
         
-        costo_final = costo_total_kwh + cargo_fijo # Add fixed charge
+        costo_final = costo_total_kwh + cargo_fijo 
 
-        # Apply "Descuento Verano" for N2 and N3 users in summer (Jan, Feb, Mar 2025)
-        if is_summer and nivel_subsidio in ["bajo", "medio"]: # N2 and N3
+        #  "Descuento Verano" para N2 y N3 (Jan, Feb, Mar 2025)
+        if is_summer and nivel_subsidio in ["bajo", "medio"]: # N2 y N3
             if kwh <= 600: # Up to 600 kWh
-                costo_final *= (1 - 0.29) # ~29% reduction
+                costo_final *= (1 - 0.29) # ~29% 
             elif kwh <= 800: # 601 to 800 kWh
-                costo_final *= (1 - 0.22) # ~22% reduction
+                costo_final *= (1 - 0.22) # ~22% 
             elif kwh <= 1000: # 801 to 1000 kWh
-                costo_final *= (1 - 0.15) # ~15% reduction
+                costo_final *= (1 - 0.15) # ~15% 
     
-    else: # Default national calculation for other locations (e.g., Buenos Aires)
+    else: 
         tarifa_base_n1 = 106.879 # ARS por kWh (referencia de EDESUR Dic 2024)
         
         if nivel_subsidio == "bajo": # Nivel 2 (N2 - Bajos Ingresos)
@@ -221,7 +219,7 @@ def calcular_costo_rango(kwh: float, nivel_subsidio: str, ubicacion: str = "Resi
             costo_total_kwh = kwh * tarifa_base_n1
         
         costo_final = costo_total_kwh
-        # Apply national IVA (21%)
+        # IVA (21%)
         costo_final = costo_final * (1 + 0.21)
 
     return round(costo_final, 2)
@@ -251,8 +249,7 @@ def generar_consejos_dinamicos(consumo_actual: float, huella_carbono_actual: flo
         {"id": "con-012", "texto": "Aprovecha la luz natural al máximo durante el día.", "urgente": False},
         {"id": "con-013", "texto": "Si tienes horno eléctrico, evita abrir la puerta constantemente para no perder calor.", "urgente": False},
         {"id": "con-014", "texto": "Considera instalar paneles solares si tu consumo es muy alto y es viable en tu zona.", "urgente": True if consumo_actual > 400 else False},
-
-        # New tips from guia_ure_edificios_y_viviendas_multifamiliares_enero_2019.pdf
+        {"id": "con-015", "texto": "Utiliza colores claros en paredes y techos para aprovechar mejor la iluminación natural y reducir el uso de luz artificial.", "urgente": False},
         {"id": "con-015", "texto": "Utilizar colores claros en paredes y techos para aprovechar mejor la iluminación natural y reducir el uso de luz artificial.", "urgente": False},
         {"id": "con-016", "texto": "Reducir al mínimo la iluminación decorativa, tanto interior como exterior, compatible con la seguridad.", "urgente": False},
         {"id": "con-017", "texto": "Mantener limpias las lámparas y pantallas para aumentar la luminosidad sin aumentar su potencia.", "urgente": False},
@@ -328,27 +325,26 @@ def generar_consejos_dinamicos(consumo_actual: float, huella_carbono_actual: flo
     if any(c.get("urgente", False) for c in consejos_filtrados):
         urgentes_disponibles = [c for c in consejos_filtrados if c.get("urgente", False)]
         
-        # Select one urgent tip randomly
+
         consejos_final = []
         if urgentes_disponibles:
             consejos_final.append(random.choice(urgentes_disponibles))
-            # Remove the selected urgent tip from consideration for other random picks
+
             consejos_filtrados = [c for c in consejos_filtrados if c["id"] != consejos_final[0]["id"]]
         
-        # Add more random tips (normal or remaining urgent) up to a total of 5-7
+
         random.shuffle(consejos_filtrados)
         consejos_final.extend(consejos_filtrados[:min(len(consejos_filtrados), 4)]) # Add up to 4 more tips
     else:
-        # If no urgent tips, just pick a few random normal ones
+
         random.shuffle(consejos_filtrados)
         consejos_final = consejos_filtrados[:min(len(consejos_filtrados), 5)]
 
-    # Add the 'cumplido' state to all original consejos for the frontend
-    # This ensures the frontend can display 'cumplidos' tips correctly.
+
     for c in all_consejos:
         c["cumplido"] = c["id"] in consejos_cumplidos_ids
 
-    # Return the full list with 'cumplido' status
+
     return all_consejos
 
 # --- ENDPOINTS DE LA API ---

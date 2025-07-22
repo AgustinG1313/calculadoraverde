@@ -28,7 +28,7 @@ cargar_css(ruta_css_absoluta)
 
 # ---------- CONSTANTES Y ESTADO DE LA APP ----------
 st.cache_data(ttl=3600) # Cache para optimizar llamadas repetidas
-URL_API = os.environ.get('BACKEND_URL') # URL de nuestro backend FastAPI
+URL_API = os.environ.get('backend.url') # URL de nuestro backend FastAPI
 
 class EstadoApp:
     """Clase para gestionar el estado de la aplicación en st.session_state."""

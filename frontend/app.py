@@ -28,7 +28,7 @@ cargar_css(ruta_css_absoluta)
 
 # ---------- CONSTANTES Y ESTADO DE LA APP ----------
 st.cache_data(ttl=3600) # Cache para optimizar llamadas repetidas
-URL_API = "http://127.0.0.1:8000" # URL de nuestro backend FastAPI
+URL_API = os.environ.get('BACKEND_URL') # URL de nuestro backend FastAPI
 
 class EstadoApp:
     """Clase para gestionar el estado de la aplicación en st.session_state."""
@@ -370,7 +370,7 @@ def cargar_consejos():
 
 def mostrar_inicio_sesion():
     """Muestra la página de inicio de sesión y registro."""
-    st.markdown("<h1 class='main-title'>♻️GreenCalc ♻️</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-title'>♻️ GreenCalc ♻️</h1>", unsafe_allow_html=True)
     st.markdown("<p class='subtitle'>Tu compañero para un consumo inteligente y sostenible.</p>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)

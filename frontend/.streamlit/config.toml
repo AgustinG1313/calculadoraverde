@@ -1,0 +1,50 @@
+[server]
+enableStaticServing = true
+
+[[theme.fontFaces]]
+family = "readex-sans"
+url = "app/static/ReadexPro-ExtraLight.ttf"
+style = "normal"
+weight = "200"
+
+[[theme.fontFaces]]
+family = "readex-sans"
+url = "app/static/ReadexPro-Light.ttf"
+style = "normal"
+weight = "300"
+
+[[theme.fontFaces]]
+family = "readex-sans"
+url = "app/static/ReadexPro-Regular.ttf"
+style = "normal"
+weight = "400"
+
+[[theme.fontFaces]]
+family = "readex-sans"
+url = "app/static/ReadexPro-Medium.ttf"
+style = "normal"
+weight = "500"
+
+[[theme.fontFaces]]
+family = "readex-sans"
+url = "app/static/ReadexPro-Semibold.ttf"
+style = "normal"
+weight = "600"
+
+[[theme.fontFaces]]
+family = "readex-sans"
+url = "app/static/ReadexPro-Bold.ttf"
+style = "normal"
+weight = "700"
+
+[[theme.fontFaces]]
+family = "readex-sans"
+url = "app/static/ReadexPro-SemiBold.ttf"
+style = "normal"
+weight = "800"
+
+[theme]
+base = "light"
+primaryColor = "#00be5c"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#ffffff"

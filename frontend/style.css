@@ -1,35 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Funnel+Display&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@160..700&display=swap');
 
-/* ---------------------------------- */
-/* 1. VARIABLES GLOBALES (--nombre)   */
-/* ---------------------------------- */
 :root {
-    /* Paleta de colores pasteles con distintas tonalidades de verde */
-    --bg-white: #F9F9F9; /* Blanco suave */
-    --text-black: #1a1a1a; /* Gris oscuro para texto - Contraste 7:1 con --bg-white */
-    --accent-green: #81C784; /* Verde pastel principal */
-    --accent-green-dark: #4CAF50; /* Verde más oscuro para hover/activo */
-    --hover-green: #E8F5E9; /* Verde muy claro para hover */
-    --gray-light: #EEEEEE; /* Gris claro para fondos de componentes */
-    --gray-medium: #BDBDBD; /* Gris medio para bordes sutiles */
-    --color-consumo: #64B5F6; /* Azul pastel */
-    --color-costo: #FFB74D; /* Naranja pastel */
-    --color-huella: #FF8A65; /* Rojo pastel para huella de carbono */
-    --color-puntos: #A5D6A7; /* Verde claro para puntos de sostenibilidad */
-    --accent-red: #EF5350; /* Rojo para urgencia/advertencia */
-    --text-gray: #555; /* Gris para subtextos */
-
-    --border-radius: 0.5rem; /* Bordes más redondeados, similar a shadcn/ui */
-    --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04); /* Sombra más suave y moderna */
-    --transition-speed-fast: 0.2s; /* Transiciones más rápidas */
-    --transition-speed-normal: 0.3s; /* Transiciones normales */
+    --bg-white: #F9F9F9;
+    --text-black: #1a1a1a;
+    --accent-green: #00be5c;
+    --accent-green-dark: #00be5c;
+    --hover-green: #E8F5E9;
+    --gray-light: #EEEEEE;
+    --gray-medium: #BDBDBD;
+    --color-consumo: #64B5F6;
+    --color-costo: #FFB74D;
+    --color-huella: #FF8A65;
+    --color-puntos: #A5D6A7;
+    --accent-red: #EF5350;
+    --text-gray: #555;
+    --border-radius: 1.5rem;
+    --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --transition-speed-fast: 0.2s;
+    --transition-speed-normal: 0.3s;
 }
 
-/* ---------------------------------- */
-/* 2. ESTILOS GENERALES / BASE        */
-/* ---------------------------------- */
 body {
-    font-family: 'Funnel Display', sans-serif; 
+    font-family: 'Readex Pro', sans-serif;
     color: var(--text-black);
     background-color: var(--bg-white);
     margin: 0;
@@ -43,7 +35,6 @@ body {
     padding: 2.5rem 1.5rem;
 }
 
-/* Centrado global para títulos y subtítulos */
 h1.main-title,
 p.subtitle,
 [data-testid="stMarkdownContainer"] h1,
@@ -53,33 +44,33 @@ p.subtitle,
     text-align: center;
 }
 
-/* ---------------------------------- */
-/* 3. TIPOGRAFÍA                      */
-/* ---------------------------------- */
+[class^=st-emotion], .st-bp {
+    font-family: 'Readex Pro', sans-serif;
+}
+
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Funnel Display', sans-serif; /* Aplicado a todos los encabezados */
+    font-family: 'Readex Pro', sans-serif;
     color: var(--accent-green-dark);
-    margin-bottom: 1rem;
-    font-weight: 700;
-    /* Nuevo estilo para los títulos */
-    background-color: rgba(232, 245, 233, 0.5); /* Fondo claro con más transparencia para sutilidad */
-    padding: 10px 15px; /* Relleno */
-    border-radius: var(--border-radius); /* Bordes redondeados */
-    display: block; /* Para que el fondo ocupe todo el ancho */
-    width: 100%; /* Asegura que el fondo abarque todo el ancho disponible */
-    box-sizing: border-box; /* Incluye padding y border en el ancho */
-    text-align: center; /* Centra el texto dentro del bloque */
+    margin: 3rem 0rem;
+    font-weight: 600;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    letter-spacing: -2px;
 }
 
 h1.main-title {
-    font-size: 3.5em;
+    font-size: 3em;
     font-weight: 900;
-    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1);
     letter-spacing: -1px;
-    /* Ajustes para el título principal */
-    background-color: transparent; /* No queremos fondo en el título principal */
+    background-color: transparent;
     padding: 0;
     border-radius: 0;
+    margin: 1rem 0rem;
 }
 
 p.subtitle {
@@ -91,26 +82,25 @@ p.subtitle {
     margin-right: auto;
 }
 
-/* ---------------------------------- */
-/* 4. COMPONENTES DE STREAMLIT        */
-/* ---------------------------------- */
+p.titleSection {
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-top: 30px
+}
 
 .stContainer, .stAlert, .stExpander {
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     padding: 1.5rem;
-    margin-bottom: 1.5rem;
     background-color: white;
     border: 1px solid var(--gray-light);
 }
 
-/* Eliminar el símbolo de pregunta (help icon) */
 [data-testid="stHelpButton"] {
     display: none !important;
 }
 
-/* Ocultar completamente los botones de Streamlit usados para la navegación */
-/* Estos son los botones invisibles que se activan con el JS de los botones HTML */
 [data-testid^="stButton-secondary"][key^="hidden_nav_button_"] {
     display: none !important;
     visibility: hidden !important;
@@ -135,20 +125,17 @@ p.subtitle {
     overflow: hidden !important;
 }
 
-
 .stButton > button {
-    background-color: var(--accent-green);
-    color: var(--bg-white);
-    border: none;
+    background-color: var((--bg-white));
+    color: var(--text-black);
+    border: 1px solid var(--gray-medium);
     border-radius: var(--border-radius);
-    padding: 0.85rem 1.5rem;
     font-weight: 600;
     transition: background-color var(--transition-speed-fast) ease, transform var(--transition-speed-fast) ease, box-shadow var(--transition-speed-fast) ease;
     box-shadow: var(--box-shadow);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
 }
 
 .stButton > button:hover {
@@ -158,54 +145,48 @@ p.subtitle {
     transform: translateY(-3px);
 }
 
-/* Ajustes para inputs numéricos y selectbox en diálogos */
-.stTextInput > div > div > input,
-.stSelectbox > div > div > div > div {
+[data-baseweb="base-input"] {
     border-radius: var(--border-radius);
     border: 1px solid var(--gray-medium);
     padding: 0.6rem 1.2rem;
     background-color: var(--gray-light);
     transition: border-color var(--transition-speed-normal);
-    /* Asegurar que el texto se vea bien dentro */
     color: var(--text-black);
     font-size: 1em;
-    line-height: 1.5; /* Mejorar legibilidad */
-    display: flex; /* Usar flexbox para centrado vertical */
-    align-items: center; /* Centrar verticalmente */
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
 }
 
-.stTextInput > div > div > input:focus,
-.stSelectbox > div > div > div > div:focus {
+[data-baseweb="base-input"]:focus {
     border-color: var(--accent-green);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(129, 199, 132, 0.3);
+    border-radius: 1.5rem;
 }
 
-/* Ajuste para el label de los inputs en los diálogos */
 .stTextInput label, .stSelectbox label {
     font-weight: 600;
     color: var(--text-black);
-    margin-bottom: 0.5rem; /* Espacio entre label y input */
+    margin-bottom: 0.5rem;
 }
 
-/* Ajuste para las opciones del selectbox en el dropdown */
-[data-baseweb="select"] div[role="option"] {
-    padding: 0.6rem 1.2rem; /* Asegurar padding consistente */
-    line-height: 1.5; /* Mejorar legibilidad */
-    color: var(--text-black); /* Asegurar color de texto */
-}
-
-
-/* Estilos para las métricas (Puntos de Sostenibilidad y Emisiones) */
-/* Aplicar a todas las métricas, incluyendo las de puntos y emisiones */
 [data-testid="stMetric"] {
-    background-color: var(--hover-green);
+    background-color: #ffffff;
     border-radius: var(--border-radius);
-    padding: 1.2rem;
+    padding: 15px 5px;
     box-shadow: var(--box-shadow);
-    text-align: center; /* Centrar el texto dentro del cuadro */
-    border: 1px solid var(--accent-green);
+    text-align: center;
+    border: 1px solid #e5e7eb;
     transition: transform var(--transition-speed-fast);
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.st-ca.st-af.st-c7 {
+    display: none;
 }
 
 [data-testid="stMetric"]:hover {
@@ -216,6 +197,11 @@ p.subtitle {
     font-size: 1.1em;
     color: var(--text-black);
     font-weight: 600;
+    grid: none;
+}
+
+[data-testid="stMetric"] div > div {
+    font-weight: 800;
 }
 
 [data-testid="stMetric"] .stMetricValue {
@@ -236,6 +222,14 @@ p.subtitle {
     margin-bottom: 1.5rem;
 }
 
+.st-emotion-cache-wnm74r {
+    justify-content: center !important;
+}
+
+.st-emotion-cache-1wivap2 {
+    width: auto !important;
+}
+
 .stTabs [data-baseweb="tab-list"] button {
     background-color: var(--gray-light);
     color: var(--text-black);
@@ -247,16 +241,14 @@ p.subtitle {
 }
 
 .stTabs [data-baseweb="tab-list"] button:hover {
-    background-color: var(--hover-green);
-    color: var(--accent-green-dark);
-    transform: translateY(-2px);
+    background-color: var(--accent-green-dark);
+    color: var(--bg-white);
 }
 
 .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
     background-color: var(--accent-green-dark);
     color: var(--bg-white);
     box-shadow: var(--box-shadow);
-    transform: translateY(-2px);
 }
 
 .stSidebar {
@@ -291,48 +283,39 @@ p.subtitle {
     transform: translateY(-3px);
 }
 
-/* ---------------------------------- */
-/* 5. CLASES ESPECÍFICAS / UTILIDADES */
-/* ---------------------------------- */
-
-/* Contenedor de la barra de navegación */
 .nav-bar-container {
-    display: flex; /* Usa flexbox para distribuir los elementos */
-    justify-content: space-around; /* Distribuye espacio uniformemente entre los ítems */
+    display: flex;
+    justify-content: space-around;
     align-items: center;
-    width: 100%; /* Ocupa todo el ancho disponible */
-    background-color: var(--gray-light); /* Fondo de la barra */
+    width: 100%;
+    background-color: var(--gray-light);
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-    padding: 0.5rem; /* Padding interno */
-    margin-bottom: 1.5rem; /* Espacio debajo de la barra */
-    gap: 0.5rem; /* Espacio entre los botones de navegación */
+    padding: 0.5rem;
+    margin-bottom: 1.5rem;
+    gap: 0.5rem;
 }
 
-/* Contenedor para cada columna de la barra de navegación (para el ícono y el botón) */
-/* Esto apunta a los divs que Streamlit crea para cada columna */
 .nav-bar-container > div[data-testid="stVerticalBlock"] {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start; /* Alinear el contenido al inicio de la columna */
-    padding: 0.5rem 0; /* Padding vertical para cada columna de navegación */
-    flex-grow: 1; /* Permite que las columnas se expandan */
+    justify-content: flex-start;
+    padding: 0.5rem 0;
+    flex-grow: 1;
 }
 
-/* Ícono redondo sobre cada botón */
 .nav-icon {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background-color: var(--accent-green); /* Color del círculo */
-    margin: 0 auto 0.4rem auto; /* Centrar horizontalmente y dar espacio abajo */
+    background-color: var(--accent-green);
+    margin: 0 auto 0.4rem auto;
     transition: background-color var(--transition-speed-fast) ease;
 }
 
-/* Estilo para los botones de navegación personalizados (rectángulos) */
 .custom-nav-button {
-    width: 100%; /* Asegura que el botón ocupe el ancho de su columna */
+    width: 100%;
     background-color: var(--gray-light);
     color: var(--text-black);
     border: 1px solid var(--gray-medium);
@@ -345,18 +328,18 @@ p.subtitle {
                 box-shadow var(--transition-speed-fast) ease,
                 border-color var(--transition-speed-fast) ease;
     text-align: center;
-    white-space: nowrap; /* Evita que el texto se rompa en varias líneas */
-    display: flex; /* Para centrar el contenido (icono + texto) */
+    white-space: nowrap;
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem; /* Espacio entre icono y texto */
+    gap: 0.5rem;
 }
 
 .custom-nav-button:hover {
     background-color: var(--hover-green);
     color: var(--accent-green-dark);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    border-color: var(--accent-green); /* Remarcado sutil en hover */
+    border-color: var(--accent-green);
 }
 
 .custom-nav-button.active {
@@ -364,29 +347,25 @@ p.subtitle {
     color: var(--bg-white);
     border-color: var(--accent-green-dark);
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    font-weight: 600; /* Un poco más de peso para la pestaña activa */
+    font-weight: 600;
 }
 
-
-/* Contenedores con scroll para electrodomésticos */
 .scrollable-container {
     max-height: 400px;
     overflow-y: auto;
     padding-right: 15px;
-    border: 1px solid var(--gray-light);
     border-radius: var(--border-radius);
     background-color: var(--bg-white);
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-/* Estilo para cada ítem de electrodoméstico dentro del scrollable-container */
 [data-testid="stVerticalBlock"] > div > [data-testid="stHorizontalBlock"] {
     background-color: var(--hover-green);
     border-radius: var(--border-radius);
     border: 1px solid var(--accent-green);
-    box-shadow: var(--box-shadow); /* Usar la sombra global */
-    margin-bottom: 0.75rem; /* Espacio entre filas */
-    padding: 0.5rem 1rem; /* Padding para la fila completa */
+    box-shadow: var(--box-shadow);
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 1rem;
     transition: background-color var(--transition-speed-fast) ease, transform var(--transition-speed-fast) ease, box-shadow var(--transition-speed-fast) ease;
 }
 
@@ -399,14 +378,14 @@ p.subtitle {
 .appliance-item-icon {
     font-size: 1.8em;
     color: var(--accent-green-dark);
-    display: flex; /* Para centrar el icono verticalmente si es necesario */
+    display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%; /* Asegurar que ocupe la altura de la fila */
+    height: 100%;
 }
 
 .appliance-item-details {
-    padding: 0.5rem 0; /* Ajuste de padding para los detalles */
+    padding: 0.5rem 0;
 }
 
 .appliance-item-details strong {
@@ -417,9 +396,9 @@ p.subtitle {
 .appliance-item-actions {
     display: flex;
     gap: 0.5rem;
-    justify-content: flex-end; /* Alinear botones a la derecha */
-    align-items: center; /* Alinear verticalmente */
-    height: 100%; /* Asegurar que ocupe la altura de la fila */
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%;
 }
 
 .appliance-item-actions .stButton > button {
@@ -430,7 +409,7 @@ p.subtitle {
     color: var(--accent-green-dark);
     box-shadow: none;
     border: 1px solid var(--accent-green);
-    border-radius: var(--border-radius); /* Asegurar bordes redondeados */
+    border-radius: var(--border-radius);
 }
 
 .appliance-item-actions .stButton > button:hover {
@@ -440,35 +419,28 @@ p.subtitle {
     transform: none;
 }
 
-
-/* Estilos para la sección de consejos - TARJETAS MEJORADAS */
-/* Apuntamos al st.container que ahora envuelve cada tarjeta de consejo */
 .stContainer > div > div > div > [data-testid="stVerticalBlock"] {
-    /* Este selector apunta al div interno de Streamlit para st.container */
-    /* que es el que realmente recibe los estilos de borde y sombra de Streamlit */
-    /* y donde queremos aplicar los estilos de la tarjeta de consejo. */
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-    background-color: var(--bg-white); /* Fondo de la tarjeta */
+    background-color: var(--bg-white);
     border: 1px solid var(--gray-light);
     padding: 1.2rem;
-    margin-bottom: 1rem; /* Espacio entre tarjetas */
+    margin-bottom: 1rem;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
     transition: transform var(--transition-speed-fast) ease, box-shadow var(--transition-speed-fast) ease;
-    height: 100%; /* Asegurar que las tarjetas tengan la misma altura en un par */
+    height: 100%;
     justify-content: space-between;
 }
 
-/* Estilos para el div interno que contiene el ícono y el texto del consejo */
 .consejo-card-inner-content {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
-    flex-grow: 1; /* Permite que el contenido ocupe el espacio disponible */
+    flex-grow: 1;
 }
 
 .consejo-card-inner-content .consejo-card-icon {
@@ -484,7 +456,6 @@ p.subtitle {
     color: var(--text-black);
 }
 
-/* Estilos específicos para tarjetas urgentes */
 .stContainer > div > div > div > [data-testid="stVerticalBlock"].urgente {
     border-color: var(--accent-red);
     background-color: #fff5f5;
@@ -494,25 +465,21 @@ p.subtitle {
     color: var(--accent-red);
 }
 
-/* Hover effect for the entire card (st.container) */
 .stContainer > div > div > div > [data-testid="stVerticalBlock"]:hover {
-    transform: translateY(-2px); /* Menos elevación para tarjetas */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Sombra más sutil en hover */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-
-/* Estilos para el checkbox de Streamlit dentro de las tarjetas de consejos */
-/* Apunta al div de Streamlit que contiene el checkbox y su label */
 .stContainer > div > div > div > [data-testid="stVerticalBlock"] > div[data-testid="stCheckbox"] {
-    margin-top: auto; /* Empujar el checkbox hacia abajo */
-    width: 100%; /* Ocupar todo el ancho disponible */
+    margin-top: auto;
+    width: 100%;
     display: flex;
-    justify-content: flex-end; /* Alinear el checkbox a la derecha */
-    border: 1px solid var(--gray-medium); /* Contorno para el checkbox */
+    justify-content: flex-end;
+    border: 1px solid var(--gray-medium);
     border-radius: var(--border-radius);
-    padding: 0.5rem; /* Padding dentro del contorno */
-    background-color: var(--gray-light); /* Fondo claro para el contorno */
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* Sombra interna sutil */
+    padding: 0.5rem;
+    background-color: var(--gray-light);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .stContainer > div > div > div > [data-testid="stVerticalBlock"] > div[data-testid="stCheckbox"] label {
@@ -522,14 +489,13 @@ p.subtitle {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    flex-direction: row-reverse; /* Pone el label a la derecha del checkbox */
-    justify-content: flex-end; /* Alinea el label y el input a la derecha */
-    width: 100%; /* Asegura que la etiqueta ocupe el ancho para alinear */
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    width: 100%;
 }
 
 .stContainer > div > div > div > [data-testid="stVerticalBlock"] > div[data-testid="stCheckbox"] input[type="checkbox"] {
-    /* Estilos para el checkbox real de Streamlit */
-    appearance: none; /* Resetear apariencia nativa */
+    appearance: none;
     width: 1.2em;
     height: 1.2em;
     border: 2px solid var(--accent-green-dark);
@@ -538,7 +504,7 @@ p.subtitle {
     position: relative;
     display: inline-block;
     vertical-align: middle;
-    flex-shrink: 0; /* Evitar que se encoja */
+    flex-shrink: 0;
 }
 
 .stContainer > div > div > div > [data-testid="stVerticalBlock"] > div[data-testid="stCheckbox"] input[type="checkbox"]:checked {
@@ -559,13 +525,11 @@ p.subtitle {
     transform: translate(-50%, -50%);
 }
 
-
-/* Estilos para las tarjetas de información del perfil */
 .profile-info-card {
     background-color: var(--hover-green);
     border: 1px solid var(--accent-green);
     border-radius: var(--border-radius);
-    padding: 1.5rem;
+    padding: 1rem;
     margin-bottom: 1rem;
     box-shadow: var(--box-shadow);
     display: flex;
@@ -601,17 +565,14 @@ p.subtitle {
     color: var(--text-gray);
 }
 
-
-/* Estilos para el st.dialog (ventana emergente) */
-.st-emotion-cache-1kyxreq { /* Esta clase puede variar, es la del contenedor del dialog */
+.st-emotion-cache-1kyxreq {
     border-radius: var(--border-radius);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     background-color: var(--bg-white);
     padding: 2rem;
 }
 
-/* Ajustes para el st.file_uploader dentro del diálogo */
-.st-emotion-cache-1c7y2kd { /* Clase del contenedor del file_uploader */
+.st-emotion-cache-1c7y2kd {
     border: 2px dashed var(--accent-green);
     border-radius: var(--border-radius);
     padding: 2rem;
@@ -625,16 +586,11 @@ p.subtitle {
     background-color: #DCEADF;
 }
 
-/* --- Nuevas reglas para eliminar paréntesis de selectores --- */
-
-/* Para st.number_input: Ocultar los elementos que contienen los paréntesis */
-/* Apunta a los divs internos que Streamlit usa para envolver los números */
 .stNumberInput > div > label > div > div:first-child > div:first-child,
 .stNumberInput > div > label > div > div:first-child > div:last-child {
-    display: none !important; /* Oculta los paréntesis izquierdo y derecho */
+    display: none !important;
 }
 
-/* Esto intenta eliminar contenido generado por pseudo-elementos */
 [data-baseweb="radio"] > div > div::before,
 [data-baseweb="radio"] > div > div::after,
 [data-baseweb="checkbox"] > div > div::before,
@@ -645,7 +601,31 @@ p.subtitle {
 }
 
 [data-baseweb="select"] div[role="option"] > div {
-    /* Asegura que el contenido se vea bien sin los paréntesis */
-    padding: 0 !important; /* Elimina cualquier padding que Streamlit pudiera usar para los paréntesis */
+    padding: 0 !important;
 }
 
+.st-c2 {
+    background-color: transparent !important;
+}
+
+.stFormSubmitButton > button, .stForm {
+    border-radius: var(--border-radius);
+}
+
+.stAlert {
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    border: none;
+}
+
+.stAlert > div.stAlertContainer {
+    border-radius: var(--border-radius);
+    background-color: rgb(0 190 92 / 25%);
+    color: #006430;
+    text-align: center;
+}
+
+.stTooltipHoverTarget:hover {
+    color: #00b256;
+}

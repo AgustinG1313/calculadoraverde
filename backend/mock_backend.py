@@ -9,9 +9,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# --- INICIALIZACIÓN DE LA APP ---
+# - INICIALIZACIÓN DE LA APP -
 app = FastAPI(
-    title="GreenCalc API",
+    title="BioTrack API",
     description="API para gestionar datos de consumo energético y sostenibilidad.",
     version="1.0.0"
 )
@@ -24,7 +24,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- MODELOS DE DATOS (PYDANTIC) ---
 class PeticionLogin(BaseModel):
     username: str
     password: str
@@ -59,7 +58,7 @@ class CalculoKWH(BaseModel):
 class MarcarConsejoCumplido(BaseModel):
     consejo_id: str
 
-# --- BASE DE DATOS EN MEMORIA (SIMULADA) ---
+# - BASE DE DATOS SIMULADA -
 db_usuarios = {
     "usuario1@example.com": {
         "id": "user-abc123def456",
@@ -111,12 +110,11 @@ BASE_ELECTRODOMESTICOS = [
     {"id": "cat-032", "nombre": "Router WiFi", "potencia_base": 10, "eficiencia_estandar": "Alta", "horas_dia_estandar": 24.0, "dias_mes_estandar": 30},
 ]
 
-# --- FUNCIONES AUXILIARES DE CÁLCULO ---
+# - FUNCIONES AUXILIARES DE CÁLCULO -
 @functools.lru_cache(maxsize=128)
 def calcular_costo_rango(kwh: float, nivel_subsidio: str, ubicacion: str = "Resistencia, Chaco") -> float:
     cargo_fijo = 2277.3100  # $/mes para Chaco
     costo_total_kwh = 0.0
-
 
     tarifas_urbanas_n1 = [
         (50, 118.6888),
@@ -128,26 +126,26 @@ def calcular_costo_rango(kwh: float, nivel_subsidio: str, ubicacion: str = "Resi
         (50, 52.0293),
         (100, 59.9922),
         (150, 84.7657),
-        (50, 97.1525),  # up to 350 kWh
+        (50, 97.1525),
         (float('inf'), 163.8120)
     ]
     tarifas_urbanas_n3 = [
         (50, 67.1414),
         (100, 75.1043),
-        (100, 99.8778),  # up to 250 kWh
-        (50, 151.4252),  # up to 300 kWh
+        (100, 99.8778),
+        (50, 151.4252),
         (float('inf'), 163.8120)
     ]
 
     tarifas_rurales = {
-        "alto": [(float('inf'), 147.4494)], # Nivel 1 rural
-        "bajo": [(350, 81.7632), (float('inf'), 147.4494)], # Nivel 2 rural
-        "medio": [(250, 96.6547), (float('inf'), 147.4494)] # Nivel 3 rural
+        "alto": [(float('inf'), 147.4494)],
+        "bajo": [(350, 81.7632), (float('inf'), 147.4494)],
+        "medio": [(250, 96.6547), (float('inf'), 147.4494)]
     }
 
     if "Chaco" in ubicacion:
         current_month = datetime.now().month
-        is_summer = current_month in [1, 2, 3, 12] # Ene, Feb, Mar, Dic
+        is_summer = current_month in [1, 2, 3, 12]
         
         applied_tiers = []
         if "Rural" in ubicacion:
@@ -171,30 +169,30 @@ def calcular_costo_rango(kwh: float, nivel_subsidio: str, ubicacion: str = "Resi
             current_rate = rate
 
             if "Rural" not in ubicacion: 
-                if is_summer: # vernao (Jan, Feb, Mar, Dec)
-                    if kwh <= 300: # Up to 300 kWh/month
-                        current_rate *= (1 - 0.60) # 60% 
-                    elif kwh <= 450: # 301 to 450 kWh/month
-                        current_rate *= (1 - 0.50) # 50% 
+                if is_summer: # vernao (Ene, Feb, Mar, Dic)
+                    if kwh <= 300:
+                        current_rate *= (1 - 0.60)
+                    elif kwh <= 450:
+                        current_rate *= (1 - 0.50)
                 else: 
-                    if kwh <= 200: # Up to 200 kWh/month
-                        current_rate *= (1 - 0.60) # 60% 
-                    elif kwh <= 300: # 201 to 300 kWh/month
-                        current_rate *= (1 - 0.50) # 50% 
+                    if kwh <= 200:
+                        current_rate *= (1 - 0.60)
+                    elif kwh <= 300:
+                        current_rate *= (1 - 0.50)
 
             costo_total_kwh += consumed_in_block * current_rate
             remaining_kwh -= consumed_in_block
         
         costo_final = costo_total_kwh + cargo_fijo 
 
-        #  "Descuento Verano" para N2 y N3 (Jan, Feb, Mar 2025)
-        if is_summer and nivel_subsidio in ["bajo", "medio"]: # N2 y N3
-            if kwh <= 600: # Up to 600 kWh
-                costo_final *= (1 - 0.29) # ~29% 
-            elif kwh <= 800: # 601 to 800 kWh
-                costo_final *= (1 - 0.22) # ~22% 
-            elif kwh <= 1000: # 801 to 1000 kWh
-                costo_final *= (1 - 0.15) # ~15% 
+        #  "Descuento Verano"
+        if is_summer and nivel_subsidio in ["bajo", "medio"]:
+            if kwh <= 600:
+                costo_final *= (1 - 0.29)
+            elif kwh <= 800:
+                costo_final *= (1 - 0.22)
+            elif kwh <= 1000:
+                costo_final *= (1 - 0.15)
     
     else: 
         tarifa_base_n1 = 106.879 # ARS por kWh (referencia de EDESUR Dic 2024)
@@ -226,7 +224,6 @@ def calcular_costo_rango(kwh: float, nivel_subsidio: str, ubicacion: str = "Resi
 
 @functools.lru_cache(maxsize=128)
 def calcular_huella_carbono(kwh: float) -> float:
-    """Calcula la huella de carbono en kg CO2 a partir de kWh."""
     # Factor de emisión promedio para la generación de electricidad en Argentina (ej: 0.3 kg CO2/kWh)
     factor_emision_co2 = 0.3 # kg CO2 por kWh
     huella = kwh * factor_emision_co2
@@ -325,14 +322,12 @@ def generar_consejos_dinamicos(consumo_actual: float, huella_carbono_actual: flo
     if any(c.get("urgente", False) for c in consejos_filtrados):
         urgentes_disponibles = [c for c in consejos_filtrados if c.get("urgente", False)]
         
-
         consejos_final = []
         if urgentes_disponibles:
             consejos_final.append(random.choice(urgentes_disponibles))
 
             consejos_filtrados = [c for c in consejos_filtrados if c["id"] != consejos_final[0]["id"]]
         
-
         random.shuffle(consejos_filtrados)
         consejos_final.extend(consejos_filtrados[:min(len(consejos_filtrados), 4)]) # Add up to 4 more tips
     else:
@@ -344,18 +339,13 @@ def generar_consejos_dinamicos(consumo_actual: float, huella_carbono_actual: flo
     for c in all_consejos:
         c["cumplido"] = c["id"] in consejos_cumplidos_ids
 
-
     return all_consejos
 
-# --- ENDPOINTS DE LA API ---
+# - ENDPOINTS DE LA API -
 
-# --- Autenticación y Perfil ---
+# - Autenticación y Perfil -
 @app.post("/login", summary="Autenticar un usuario.")
 async def login(peticion: PeticionLogin):
-    """
-    Permite a un usuario iniciar sesión en la aplicación.
-    Verifica las credenciales y devuelve el ID del usuario si son válidas.
-    """
     if peticion.username in db_usuarios and db_usuarios[peticion.username]["password"] == peticion.password:
         # Devolver el ID único del usuario
         return {"mensaje": "Inicio de sesión exitoso", "usuario_id": db_usuarios[peticion.username]["id"]}
@@ -363,9 +353,6 @@ async def login(peticion: PeticionLogin):
 
 @app.post("/registro", summary="Registrar un nuevo usuario.")
 async def registro(peticion: PeticionRegistro):
-    """
-    Registra un nuevo usuario en la base de datos simulada.
-    """
     if peticion.username in db_usuarios:
         raise HTTPException(status_code=409, detail="El usuario ya existe")
     
@@ -387,9 +374,6 @@ async def registro(peticion: PeticionRegistro):
 
 @app.get("/usuarios/{usuario_id}", summary="Obtener datos de perfil de un usuario por ID.")
 async def obtener_perfil_usuario(usuario_id: str):
-    """
-    Devuelve la información de perfil de un usuario, excluyendo la contraseña.
-    """
     for user_data in db_usuarios.values():
         if user_data["id"] == usuario_id:
             perfil = user_data.copy()
@@ -399,9 +383,6 @@ async def obtener_perfil_usuario(usuario_id: str):
 
 @app.put("/usuarios/{usuario_id}", summary="Actualizar datos de perfil de un usuario por ID.")
 async def actualizar_perfil_usuario(usuario_id: str, datos_actualizados: Dict):
-    """
-    Actualiza la información de perfil de un usuario.
-    """
     for username, user_data in db_usuarios.items():
         if user_data["id"] == usuario_id:
             # Solo permitir actualizar campos específicos
@@ -420,9 +401,6 @@ async def actualizar_perfil_usuario(usuario_id: str, datos_actualizados: Dict):
 # --- Facturas ---
 @app.get("/facturas/{username}", summary="Obtener todas las facturas de un usuario.")
 async def obtener_facturas(username: str):
-    """
-    Devuelve la lista de facturas registradas para un usuario.
-    """
     user_data = db_usuarios.get(username)
     if user_data:
         return user_data["facturas"]
@@ -430,9 +408,6 @@ async def obtener_facturas(username: str):
 
 @app.post("/facturas/{username}", summary="Añadir una nueva factura para un usuario.")
 async def anadir_factura(username: str, factura: Factura):
-    """
-    Agrega una nueva factura a la lista de facturas de un usuario.
-    """
     user_data = db_usuarios.get(username)
     if user_data:
         db_usuarios[username]["facturas"].append(factura.dict())
@@ -441,9 +416,6 @@ async def anadir_factura(username: str, factura: Factura):
 
 @app.delete("/facturas/{username}/{factura_id}", summary="Eliminar una factura de un usuario.")
 async def eliminar_factura(username: str, factura_id: str):
-    """
-    Elimina una factura específica de un usuario.
-    """
     user_data = db_usuarios.get(username)
     if user_data:
         facturas_actualizadas = [f for f in user_data["facturas"] if f["id"] != factura_id]
@@ -456,9 +428,6 @@ async def eliminar_factura(username: str, factura_id: str):
 # --- Electrodomésticos ---
 @app.get("/electrodomesticos/{username}", summary="Obtener todos los electrodomésticos de un usuario.")
 async def obtener_electrodomesticos_usuario(username: str):
-    """
-    Devuelve la lista de electrodomésticos registrados para un usuario.
-    """
     user_data = db_usuarios.get(username)
     if user_data:
         return user_data["electrodomesticos"]
@@ -466,9 +435,6 @@ async def obtener_electrodomesticos_usuario(username: str):
 
 @app.post("/electrodomesticos/{username}", summary="Añadir un nuevo electrodoméstico a un usuario.")
 async def anadir_electrodomestico(username: str, electrodomestico: Electrodomestico):
-    """
-    Agrega un nuevo electrodoméstico a la lista de electrodomésticos de un usuario.
-    """
     user_data = db_usuarios.get(username)
     if user_data:
         db_usuarios[username]["electrodomesticos"].append(electrodomestico.dict())
@@ -477,11 +443,8 @@ async def anadir_electrodomestico(username: str, electrodomestico: Electrodomest
 
 @app.put("/electrodomesticos/{username}/{electrodomestico_id}", summary="Actualizar un electrodoméstico de un usuario.")
 async def actualizar_electrodomestico(username: str, electrodomestico_id: str, datos_actualizados: Dict):
-    """
-    Actualiza la información de un electrodoméstico específico de un usuario.
-    """
     for user_data in db_usuarios.values():
-        if user_data["username"] == username: # Check by username as in other methods
+        if user_data["username"] == username:
             for i, ed in enumerate(user_data["electrodomesticos"]):
                 if ed["id"] == electrodomestico_id:
                     user_data["electrodomesticos"][i].update(datos_actualizados)
@@ -492,9 +455,6 @@ async def actualizar_electrodomestico(username: str, electrodomestico_id: str, d
 
 @app.delete("/electrodomesticos/{username}/{electrodomestico_id}", summary="Eliminar un electrodoméstico de un usuario.")
 async def eliminar_electrodomestico(username: str, electrodomestico_id: str):
-    """
-    Elimina un electrodoméstico específico de un usuario.
-    """
     user_data = db_usuarios.get(username)
     if user_data:
         eds_actualizados = [ed for ed in user_data["electrodomesticos"] if ed["id"] != electrodomestico_id]
@@ -506,22 +466,14 @@ async def eliminar_electrodomestico(username: str, electrodomestico_id: str):
 
 @app.get("/catalogo/electrodomesticos", summary="Obtener el catálogo de electrodomésticos.")
 async def obtener_catalogo_electrodomesticos():
-    """
-    Devuelve la lista completa de electrodomésticos disponibles en el catálogo.
-    """
     return BASE_ELECTRODOMESTICOS
 
-# --- Cálculos ---
+# - Cálculos -
 @app.post("/calcular/costo", summary="Calcular costo estimado basado en kWh y subsidio.")
 async def calcular_costo_endpoint(peticion: CalculoKWH):
-    """
-    Endpoint para calcular el costo de energía basada en el consumo y el nivel de subsidio.
-    """
-    user_location = "Resistencia, Chaco" # Default if not found or no user context
+    user_location = "Resistencia, Chaco"
     found_user = None
     for user_data_val in db_usuarios.values():
-        # In a real application, you'd pass the user ID from the frontend for this context.
-        # For this mock, we are trying to infer user_location from any user with the given subsidy level.
         if user_data_val["nivel_subsidio"] == peticion.nivel_subsidio:
             found_user = user_data_val
             user_location = found_user["ubicacion"]
@@ -532,19 +484,12 @@ async def calcular_costo_endpoint(peticion: CalculoKWH):
 
 @app.post("/calcular/huella_carbono", summary="Calcular huella de carbono basada en kWh.")
 async def calcular_huella_carbono_endpoint(peticion: CalculoKWH):
-    """
-    Endpoint para calcular la huella de carbono basada en el consumo de energía.
-    """
     huella_calculada = calcular_huella_carbono(peticion.kwh)
     return {"huella_carbono_kg_co2": huella_calculada}
 
-# --- Consejos ---
+# - Consejos -
 @app.get("/consejos/{usuario_id}", summary="Obtener consejos de sostenibilidad para un usuario.")
 async def obtener_consejos(usuario_id: str):
-    """
-    Genera y devuelve consejos de sostenibilidad personalizados para un usuario.
-    Los consejos se basan en el consumo actual y puntos de sostenibilidad.
-    """
     user_data = None
     for u_data in db_usuarios.values():
         if u_data["id"] == usuario_id:
@@ -566,10 +511,6 @@ async def obtener_consejos(usuario_id: str):
 
 @app.post("/consejos/{username}/marcar_cumplido", summary="Marcar un consejo como cumplido y sumar puntos.")
 async def marcar_consejo_cumplido(username: str, peticion: MarcarConsejoCumplido):
-    """
-    Marca un consejo como cumplido para un usuario y le otorga puntos de sostenibilidad.
-    Ahora recibe el consejo_id en el cuerpo de la petición.
-    """
     user_data = db_usuarios.get(username)
     if user_data:
         consejo_id = peticion.consejo_id
@@ -587,13 +528,9 @@ async def marcar_consejo_cumplido(username: str, peticion: MarcarConsejoCumplido
         return {"mensaje": "Consejo ya estaba marcado como cumplido"}
     raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-# --- Nuevos Endpoints para Métricas y Resumen ---
+# - Nuevos Endpoints para Métricas y Resumen -
 @app.get("/metricas/resumen/{usuario_id}", summary="Obtener métricas de resumen principales para la página de Inicio.")
 async def obtener_metricas_resumen(usuario_id: str):
-    """
-    Calcula y devuelve las métricas clave de consumo, costo, huella y puntos
-    para la página de inicio.
-    """
     user_data = None
     for u_data in db_usuarios.values():
         if u_data["id"] == usuario_id:
@@ -617,7 +554,7 @@ async def obtener_metricas_resumen(usuario_id: str):
         
         consejos_disponibles = generar_consejos_dinamicos(total_consumo_kwh, total_huella_co2, puntos_sostenibilidad, user_data["consejos_cumplidos"])
         consejos_no_cumplidos = [c for c in consejos_disponibles if not c.get("cumplido")]
-        consejo_dinamico = random.choice(consejos_no_cumplidos) if consejos_no_cumplidos else {"id": "con-000", "texto": "¡Bienvenido a GreenCalc! Comienza a registrar tus facturas y electrodomésticos.", "urgente": False}
+        consejo_dinamico = random.choice(consejos_no_cumplidos) if consejos_no_cumplidos else {"id": "con-000", "texto": "¡Bienvenido a BioTrack! Comienza a registrar tus facturas y electrodomésticos.", "urgente": False}
 
         return {
             "consumo_total_kwh": total_consumo_kwh,
@@ -637,9 +574,6 @@ async def obtener_metricas_resumen(usuario_id: str):
 
 @app.get("/metricas/perfil/{usuario_id}", summary="Obtener métricas y progreso para la página de Perfil.")
 async def obtener_metricas_perfil(usuario_id: str):
-    """
-    Calcula y devuelve métricas detalladas y el progreso de sostenibilidad para el perfil.
-    """
     user_data = None
     for u_data in db_usuarios.values():
         if u_data["id"] == usuario_id:
@@ -682,9 +616,6 @@ async def obtener_metricas_perfil(usuario_id: str):
 
 @app.post("/generar_datos_prueba/{username}", summary="Generar datos de prueba para un usuario.")
 async def generar_datos_prueba(username: str):
-    """
-    Genera facturas y electrodomésticos de prueba para un usuario.
-    """
     user_data = db_usuarios.get(username)
     if not user_data:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")

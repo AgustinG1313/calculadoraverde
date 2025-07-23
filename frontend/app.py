@@ -1,5 +1,3 @@
-# frontend/app.py
-
 import streamlit as st
 import os
 import requests
@@ -10,28 +8,23 @@ import uuid
 from datetime import datetime
 import random
 
-# ---------- CONFIGURACIÓN INICIAL Y CARGA DE ESTILOS ----------
-st.set_page_config(page_title="GreenCalc", page_icon="♻️", layout="wide")
+st.set_page_config(page_title="BioTrack", page_icon="🌱", layout="wide")
 
 def cargar_css(ruta_archivo):
-    """Carga un archivo CSS para aplicar estilos personalizados."""
     try:
         with open(ruta_archivo, encoding='utf-8') as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
     except FileNotFoundError:
         st.error(f"Archivo CSS no encontrado en la ruta: {ruta_archivo}")
 
-# Obtener la ruta absoluta del archivo style.css
 ruta_script = os.path.dirname(__file__)
 ruta_css_absoluta = os.path.join(ruta_script, "style.css")
 cargar_css(ruta_css_absoluta)
 
-# ---------- CONSTANTES Y ESTADO DE LA APP ----------
-st.cache_data(ttl=3600) # Cache para optimizar llamadas repetidas
-URL_API = "http://127.0.0.1:8000" # URL de nuestro backend FastAPI
+st.cache_data(ttl=3600)
+URL_API = "http://127.0.0.1:8000" # URL backend FastAPI
 
 class EstadoApp:
-    """Clase para gestionar el estado de la aplicación en st.session_state."""
     def __init__(self):
         self.sesion_iniciada = False
         self.usuario_actual = "" # Almacenará el username (correo electrónico)
@@ -53,46 +46,37 @@ estado = st.session_state.estado
 
 
 def cambiar_pagina(pagina):
-    """Cambia la página actual de la aplicación."""
     estado.pagina_actual = pagina
 
 def toggle_consejo(consejo_id):
-    """Marca un consejo como cumplido/no cumplido en el backend."""
     try:
         respuesta = requests.post(f"{URL_API}/consejos/{estado.usuario_actual_id}/marcar_cumplido", json={"consejo_id": consejo_id})
         respuesta.raise_for_status()
-        st.cache_data.clear() # Limpiar caché para recargar consejos
+        st.cache_data.clear()
         st.rerun()
     except requests.exceptions.RequestException as e:
         st.error(f"Error al actualizar el consejo: {e}")
 
-
-# ---------- FUNCIONES DE DIÁLOGO (MODALES) ----------
-
 @st.dialog("Subir Factura (OCR)")
 def dialogo_subir_ocr():
-    """Define la interfaz para el diálogo de subida de factura por OCR."""
-    st.subheader("Sube tu factura para procesar")
-    uploaded_file = st.file_uploader("Arrastra y suelta tu archivo aquí o haz clic para buscar", type=["pdf", "png", "jpg", "jpeg"], key="ocr_file_uploader")
+    uploaded_file = st.file_uploader("Arrastra y soltá tu archivo acá o hace clic para buscar", type=["pdf", "png", "jpg", "jpeg"], key="ocr_file_uploader")
 
     if uploaded_file is not None:
-        st.info("Archivo recibido. La funcionalidad de procesamiento OCR está en desarrollo. ¡Gracias por tu paciencia!")
+        st.info("Archivo recibido. La funcionalidad de procesamiento OCR está en desarrollo.")
 
 @st.dialog("Configurar Electrodoméstico")
 def dialogo_configurar_electrodomestico(nombre_aparato, datos_aparato_catalogo):
-    st.subheader(f"Añadir {nombre_aparato}")
+    st.markdown(f"<p style='text-align: center; padding-bottom: 10px;'>Añadir {nombre_aparato}</p>", unsafe_allow_html=True)
 
     with st.form(key=f"form_electrodomestico_{nombre_aparato}"):
         col1, col2 = st.columns(2)
         with col1:
-            # Asegurar que potencia, horas_dia y dias_mes sean number_input
             cantidad = st.number_input("Cantidad", min_value=1, value=1, key=f"cant_{nombre_aparato}")
             potencia = st.number_input("Potencia (W)", min_value=0.0, value=float(datos_aparato_catalogo.get("potencia_base", 0)), key=f"pot_{nombre_aparato}")
         with col2:
             horas_dia = st.number_input("Horas de uso por día", min_value=0.0, max_value=24.0, value=float(datos_aparato_catalogo.get("horas_dia_estandar", 1.0)), step=0.5, key=f"hpd_{nombre_aparato}")
             dias_mes = st.number_input("Días de uso por mes", min_value=1, max_value=31, value=int(datos_aparato_catalogo.get("dias_mes_estandar", 30)), key=f"dpm_{nombre_aparato}")
 
-        # Electrodomésticos: Eficiencia Energética - 
         opciones_eficiencia = ["A+++", "A++", "A+", "A", "B", "C", "D", "E", "F", "G"]
 
         default_eficiencia = "A"
@@ -147,7 +131,6 @@ def dialogo_editar_electrodomestico(aparato_existente):
             horas_dia = st.number_input("Horas de uso por día", min_value=0.0, max_value=24.0, value=float(aparato_existente['horas_dia']), step=0.5, key=f"edit_hpd_{aparato_existente['id']}")
             dias_mes = st.number_input("Días de uso por mes", min_value=1, max_value=31, value=int(aparato_existente['dias_mes']), key=f"edit_dpm_{aparato_existente['id']}")
 
-        # Electrodomésticos: Eficiencia Energética - Selector 
         eficiencia_options = ["A+++", "A++", "A+", "A", "B", "C", "D", "E", "F", "G"]
 
         try:
@@ -193,9 +176,7 @@ def dialogo_editar_electrodomestico(aparato_existente):
 
 @st.dialog("Registrar Factura")
 def dialogo_registrar_factura():
-    """Define la interfaz y lógica para el diálogo de registro de facturas."""
     with st.form(key="form_factura_manual"):
-        st.subheader("Registrar Consumo Mensual")
         col1, col2 = st.columns(2)
         with col1:
             # Registrar Factura: Mes - Selector 
@@ -249,11 +230,10 @@ def dialogo_registrar_factura():
                 except requests.exceptions.RequestException as e:
                     st.error(f"Error al guardar factura: {e}")
 
-# ---------- FUNCIONES DE CARGA DE DATOS DEL BACKEND ----------
+# - FUNCIONES DE CARGA DE DATOS DEL BACKEND -
 
 @st.cache_data(ttl=3600)
 def cargar_datos_facturas():
-    """Carga las facturas del usuario desde el backend."""
     try:
         respuesta = requests.get(f"{URL_API}/facturas/{estado.usuario_actual}")
         respuesta.raise_for_status()
@@ -273,7 +253,6 @@ def cargar_datos_facturas():
 
 @st.cache_data(ttl=3600)
 def cargar_datos_electrodomesticos():
-    """Carga los electrodomésticos del usuario desde el backend."""
     try:
         respuesta = requests.get(f"{URL_API}/electrodomesticos/{estado.usuario_actual}")
         respuesta.raise_for_status()
@@ -293,7 +272,6 @@ def cargar_datos_electrodomesticos():
 
 @st.cache_data(ttl=3600)
 def cargar_catalogo_electrodomesticos():
-    """Carga el catálogo general de electrodomésticos desde el backend y lo limita a 50 items."""
     try:
         respuesta = requests.get(f"{URL_API}/catalogo/electrodomesticos")
         respuesta.raise_for_status()
@@ -311,7 +289,6 @@ def cargar_catalogo_electrodomesticos():
 
 @st.cache_data(ttl=3600)
 def cargar_metricas_resumen():
-    """Carga las métricas de resumen para la página de inicio."""
     try:
         respuesta = requests.get(f"{URL_API}/metricas/resumen/{estado.usuario_actual_id}")
         respuesta.raise_for_status()
@@ -331,7 +308,6 @@ def cargar_metricas_resumen():
 
 @st.cache_data(ttl=3600)
 def cargar_metricas_perfil():
-    """Carga las métricas detalladas y el progreso para la página de perfil."""
     try:
         respuesta = requests.get(f"{URL_API}/metricas/perfil/{estado.usuario_actual_id}")
         respuesta.raise_for_status()
@@ -351,7 +327,6 @@ def cargar_metricas_perfil():
 
 @st.cache_data(ttl=3600)
 def cargar_consejos():
-    """Carga los consejos de sostenibilidad para el usuario."""
     try:
         respuesta = requests.get(f"{URL_API}/consejos/{estado.usuario_actual_id}")
         respuesta.raise_for_status()
@@ -366,23 +341,18 @@ def cargar_consejos():
         st.error(f"Error inesperado al cargar consejos de sostenibilidad: {e}.")
         return []
 
-# ---------- VISTAS PRINCIPALES DE LA APLICACIÓN ----------
-
 def mostrar_inicio_sesion():
-    """Muestra la página de inicio de sesión y registro."""
-    st.markdown("<h1 class='main-title'>♻️GreenCalc ♻️</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='subtitle'>Tu compañero para un consumo inteligente y sostenible.</p>", unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-title'>BioTrack</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitle'>Conectá con un consumo que cuida tu mundo.</p>", unsafe_allow_html=True)
+    
     _, col_main, _ = st.columns([1, 1.5, 1])
     with col_main:
         with st.container(): 
-            tab_login, tab_register = st.tabs(["🔑 Iniciar Sesión", "📝 Registrarse"])
+            tab_login, tab_register = st.tabs(["Iniciar Sesión", "Registrarse"])
 
             with tab_login:
-                st.subheader("Bienvenido de nuevo")
                 with st.form(key="login_form"):
-                    correo = st.text_input("Correo electrónico (usuario)", value="usuario1@example.com")
+                    correo = st.text_input("Correo Electrónico", value="usuario1@example.com")
                     contrasena = st.text_input("Contraseña", type="password", value="password123")
                     if st.form_submit_button("Entrar", type="primary", use_container_width=True):
                         try:
@@ -414,21 +384,19 @@ def mostrar_inicio_sesion():
 
             with tab_register:
                 with st.form(key="register_form", clear_on_submit=True):
-                    st.subheader("Crea tu cuenta")
                     nombre = st.text_input("Nombre Completo", key="reg_nombre")
                     correo_nuevo = st.text_input("Correo electrónico (será tu usuario)", key="reg_correo")
                     pass_nueva = st.text_input("Contraseña", type="password", key="reg_pass1")
                     pass_confirm = st.text_input("Confirmar Contraseña", type="password", key="reg_pass2")
 
-                    # Registro: Ubicación - Selector 
+                    # Registro: Ubicación - Selector
                     ubicaciones_registro = ["Resistencia, Chaco", "Corrientes", "Buenos Aires", "Córdoba", "Santa Fe", "Otra"]
                     ubicacion = st.selectbox("Ubicación", ubicaciones_registro, key="reg_ubicacion")
 
-                    # Registro: Nivel de Subsidio - Selector (N1, N2, N3) 
+                    # Registro: Nivel de Subsidio - Selector (N1, N2, N3)
                     niveles_subsidio_registro = ["N1", "N2", "N3"]
                     nivel_subsidio_display = st.selectbox("Nivel de Subsidio", niveles_subsidio_registro, key="reg_subsidio")
 
-                    # Mapeo para el backend
                     nivel_subsidio_backend_map = {
                         "N1": "alto",
                         "N2": "bajo", # N2 es bajos ingresos
@@ -453,14 +421,13 @@ def mostrar_inicio_sesion():
                                 st.error(f"Error al registrar: {e}. El usuario ya podría existir o hubo un problema de conexión.")
                             except requests.exceptions.RequestException as e:
                                 st.error(f"Error inesperado al registrar: {e}.")
-    st.markdown("<br><br>", unsafe_allow_html=True)
 
 def mostrar_resumen_general():
     """Página principal de la aplicación con un resumen del impacto del usuario."""
-    st.title(f"¡Bienvenido a GreenCalc, {estado.usuario_actual_nombre}! 🌿")
-    st.markdown("<p style='text-align: center;'>Aquí puedes ver un resumen de tu impacto energético y de sostenibilidad.</p>", unsafe_allow_html=True)
+    st.title(f"¡Bienvenido a BioTrack, {estado.usuario_actual_nombre}!")
+    st.markdown("<p class='titleSection'>Resumen Energético</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; padding-bottom: 10px;'>Acá podes ver un resumen de tu impacto energético y de sostenibilidad.</p>", unsafe_allow_html=True)
 
-    st.subheader("Tu Resumen Energético")
     with st.container(): 
         metricas = cargar_metricas_resumen()
 
@@ -500,9 +467,19 @@ def mostrar_resumen_general():
                 st.metric(label="Puntos de Sostenibilidad 🌱", value=metricas['puntos_sostenibilidad'])
         else:
             st.warning("No se pudieron cargar las métricas de resumen. Por favor, asegúrate de que el backend esté funcionando y que hayas iniciado sesión correctamente.")
-    st.divider()
 
-    st.subheader("Resumen de Actividad")
+    
+    with st.container(): 
+        if metricas:
+            consejo = metricas.get('consejo_dinamico')
+            if consejo:
+                st.info(f"💡 **Consejo Sostenible del Día:** {consejo['texto']}{' ⚠️ (Urgente)' if consejo.get('urgente', False) else ''}")
+            else:
+                st.info("No hay consejos disponibles en este momento.")
+        else:
+            st.warning("No se pudieron cargar las métricas de resumen.")
+
+    st.markdown("<p class='titleSection'>Resumen de Actividad</p>", unsafe_allow_html=True)
     with st.container(): 
         if metricas:
             resumen_actividad = metricas.get("resumen_actividad", {})
@@ -524,21 +501,8 @@ def mostrar_resumen_general():
                 st.info("No hay datos de resumen de actividad para mostrar. Registra facturas y electrodomésticos.")
         else:
             st.warning("No se pudieron cargar las métricas de resumen.")
-    st.divider()
 
-    st.subheader("Consejo Sostenible del Día")
-    with st.container(): 
-        if metricas:
-            consejo = metricas.get('consejo_dinamico')
-            if consejo:
-                st.info(f"💡 **Consejo:** {consejo['texto']}{' ⚠️ (Urgente)' if consejo.get('urgente', False) else ''}")
-            else:
-                st.info("No hay consejos disponibles en este momento.")
-        else:
-            st.warning("No se pudieron cargar las métricas de resumen.")
-    st.divider()
-
-    st.subheader("Desglose de Consumo por Electrodoméstico")
+    st.markdown("<p class='titleSection'>Consumo por Electrodoméstico</p>", unsafe_allow_html=True)
     with st.container(): 
         if metricas:
             df_desglose = pd.DataFrame(metricas.get('desglose_electrodomesticos', []))
@@ -552,12 +516,9 @@ def mostrar_resumen_general():
                 st.info("No hay consumo estimado de electrodomésticos para mostrar un gráfico. ¡Añade algunos en la sección 'Electrodomésticos'!")
         else:
             st.warning("No se pudieron cargar las métricas de resumen.")
-    st.divider()
-
 
 def mostrar_perfil():
-    """Página de perfil del usuario con configuración y métricas de impacto."""
-    st.title("Información Personal 👤")
+    st.title("Mi Perfil")
 
     datos_perfil = cargar_metricas_perfil()
 
@@ -579,7 +540,7 @@ def mostrar_perfil():
                 <div class="profile-info-card">
                     <span class="profile-info-card-icon">📧</span>
                     <div class="profile-info-card-content">
-                        <strong>Correo electrónico (Usuario)</strong>
+                        <strong>Correo Electrónico</strong>
                         <span>{estado.usuario_actual}</span>
                     </div>
                 </div>
@@ -612,9 +573,7 @@ def mostrar_perfil():
                 </div>
                 """, unsafe_allow_html=True)
 
-        st.divider()
-
-        st.subheader("Tu Impacto Sostenible")
+        st.markdown("<p class='titleSection'>Tu Impacto Sostenible</p>", unsafe_allow_html=True)
         with st.container(): 
             col_puntos, col_emisiones = st.columns(2)
             with col_puntos:
@@ -644,14 +603,14 @@ def mostrar_perfil():
             with st.form("form_config_perfil"):
                 nuevo_nombre = st.text_input("Nombre", value=estado.usuario_actual_nombre, key="perfil_nombre")
 
-                # Perfil: Ubicación - Selector 
+                # Perfil: Ubicación
                 ubicaciones_perfil = ["Resistencia, Chaco", "Corrientes", "Buenos Aires", "Córdoba", "Santa Fe", "Otra"]
                 current_ubicacion = datos_perfil.get('ubicacion', 'Resistencia, Chaco')
-                # Solución segura para índice:
+
                 index_ubicacion = ubicaciones_perfil.index(current_ubicacion) if current_ubicacion in ubicaciones_perfil else 0
                 nueva_ubicacion = st.selectbox("Ubicación", ubicaciones_perfil, index=index_ubicacion, key="perfil_ubicacion")
 
-                # Perfil: Nivel de Subsidio - Selector (N1, N2, N3) 
+                # Perfil: Nivel de Subsidio - Selector (N1, N2, N3)
                 niveles_subsidio_form = ["N1", "N2", "N3"]
                 nivel_subsidio_backend_map = {
                     "N1": "alto",
@@ -696,8 +655,6 @@ def mostrar_perfil():
                             except requests.exceptions.RequestException as e:
                                 st.error(f"Error inesperado al actualizar perfil: {e}.")
 
-        st.divider()
-
         if st.button("Cerrar Sesión", use_container_width=True, key="cerrar_sesion_btn_perfil"):
             estado.sesion_iniciada = False
             estado.usuario_actual = ""
@@ -709,7 +666,6 @@ def mostrar_perfil():
     else:
         st.warning("No se pudo cargar la información del perfil.")
 
-    st.divider()
     if estado.usuario_actual == "admin@example.com":
         estado.modo_administrador = st.checkbox("Activar Modo Administrador", value=estado.modo_administrador)
         if estado.modo_administrador:
@@ -735,15 +691,12 @@ def mostrar_perfil():
                 if st.button("Desactivar Modo Administrador", key="admin_desactivar"):
                     estado.modo_administrador = False
                     st.rerun()
-    st.divider()
-
 
 def mostrar_facturas():
-    """Página de gestión de facturas de energía."""
-    st.title("Análisis de Facturas 📄")
+    st.title("Análisis de Facturas")
 
     with st.container(): 
-        st.subheader("Acciones de Facturación")
+        st.markdown("<p class='titleSection'>¿Qué querés hacer?</p>", unsafe_allow_html=True)
         col_add_manual, col_upload_ocr = st.columns(2)
 
         with col_add_manual:
@@ -765,11 +718,11 @@ def mostrar_facturas():
         st.info("Aún no has registrado facturas.")
         return
 
-    st.header("Panel de Análisis de Consumo")
+    st.markdown("<p class='titleSection'>Panel de Análisis de Consumo</p>", unsafe_allow_html=True)
     with st.container(): 
         df_facturas = pd.DataFrame(lista_facturas)
 
-        # Selecciona un año a analizar - Selector (solo selectbox, no manual)
+        # Selecciona un año a analizar
         # Solución segura: Asegurar que la lista de años no esté vacía
         lista_anios_disponibles = sorted(df_facturas["anio"].unique(), reverse=True) if not df_facturas.empty else [datetime.now().year]
         anio_seleccionado = st.selectbox("Selecciona un año para analizar:", lista_anios_disponibles, key="fact_anio_sel")
@@ -809,19 +762,17 @@ def mostrar_facturas():
         if total_costo_anual > costo_estimado * 1.2 and costo_estimado > 0:
             st.warning(f"¡Atención! Tu costo real (${total_costo_anual:,.2f}) es más de un 20% superior al costo estimado (${costo_estimado:,.2f}) para tu consumo.")
 
-    st.divider()
-
-    st.subheader("Análisis Mensual")
+    st.markdown("<p class='titleSection'>Análisis Mensual</p>", unsafe_allow_html=True)
     with st.container(): 
         meses_ordenados = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
         df_seleccionado['mes'] = pd.Categorical(df_seleccionado['mes'], categories=meses_ordenados, ordered=True)
         df_grafico = df_seleccionado.sort_values('mes')
 
-        # Tipos de Gráficos - Selector (para la métrica) (solo selectbox, no manual)
-        opciones_metrica_grafico = ["Consumo Mensual", "Costo Mensual"] # "Huella de Carbono Mensual" requiere cálculo adicional por mes
+        # Tipos de Gráficos - Selector
+        opciones_metrica_grafico = ["Consumo Mensual", "Costo Mensual"]
         metrica_seleccionada = st.selectbox("Selecciona la métrica a graficar:", opciones_metrica_grafico, key="fact_metrica_graf")
 
-        # Tipo de gráfico (Barras, Línea, Área) - Existente y se mantiene (solo selectbox, no manual)
+        # Tipo de gráfico (Barras, Línea, Área)
         tipo_grafico = st.selectbox("Tipo de visualización:", ["Barras", "Línea", "Área"], key="fact_tipo_graf")
 
         fig_height = 400
@@ -834,16 +785,11 @@ def mostrar_facturas():
             if metrica_seleccionada == "Consumo Mensual":
                 y_column = "consumo_kwh"
                 title_text = "Consumo Mensual (kWh)"
-                color_sequence = ['#81C784'] # Un color para el consumo
+                color_sequence = ['#81C784']
             elif metrica_seleccionada == "Costo Mensual":
                 y_column = "costo"
                 title_text = "Costo Mensual (ARS)"
-                color_sequence = ['#FFB74D'] # Un color para el costo
-            # Si se añade Huella de Carbono Mensual, se debería calcular por mes aquí
-            # elif metrica_seleccionada == "Huella de Carbono Mensual":
-            #    y_column = "huella_carbono_mensual" # Asumiendo que esta columna existe o se calcula
-            #    title_text = "Huella CO₂ Mensual (kg)"
-            #    color_sequence = ['#64B5F6']
+                color_sequence = ['#FFB74D']
 
             if not df_grafico.empty:
                 if tipo_grafico == "Barras":
@@ -870,12 +816,9 @@ def mostrar_facturas():
             cmap='YlOrRd', subset=['Costo (ARS)']
         )
         st.dataframe(styled_df, use_container_width=True, hide_index=True)
-    st.divider()
-
 
 def mostrar_electrodomesticos():
-    """Página para gestionar el inventario de electrodomésticos del usuario."""
-    st.title("Gestión de Electrodomésticos 🔌")
+    st.title("Gestión de Electrodomésticos")
 
     iconos_electrodomesticos = {
         "Heladera c/freezer (moderno)": "🧊", "Freezer independiente": "❄️",
@@ -902,9 +845,7 @@ def mostrar_electrodomesticos():
         "Bomba presurizadora": "ポンプ", "Herramientas eléctricas (taladro, sierra)": "🛠️",
     }
 
-
-    st.subheader("Catálogo Rápido")
-    with st.container(): # Removed border=True
+    with st.container():
         if "catalogo_electrodomesticos" not in st.session_state or not st.session_state.catalogo_electrodomesticos:
             st.session_state.catalogo_electrodomesticos = cargar_catalogo_electrodomesticos()
 
@@ -913,12 +854,12 @@ def mostrar_electrodomesticos():
 
         if st.session_state.catalogo_electrodomesticos:
             st.markdown('<div class="scrollable-container">', unsafe_allow_html=True)
-            cols = st.columns(5)
+            cols = st.columns(3)
             for i, datos_aparato_catalogo in enumerate(st.session_state.catalogo_electrodomesticos):
                 nombre_aparato = datos_aparato_catalogo.get('nombre', 'Desconocido')
                 ya_existe = nombre_aparato in nombres_en_inventario
 
-                with cols[i % 5]:
+                with cols[i % 3]:
                     icono = iconos_electrodomesticos.get(nombre_aparato, "⚡")
                     if st.button(
                         f"{icono} {nombre_aparato}",
@@ -931,9 +872,7 @@ def mostrar_electrodomesticos():
         else:
             st.warning("No se pudo cargar el catálogo de electrodomésticos. No puedes añadir nuevos.")
 
-    st.divider()
-
-    st.subheader("Mi Inventario")
+    st.markdown("<p class='titleSection'>Mi Inventario</p>", unsafe_allow_html=True)
     with st.container(): 
         if inventario is None:
             return
@@ -991,7 +930,7 @@ def mostrar_electrodomesticos():
                     st.button("🗑️", key=f"eliminar_{aparato['id']}", help="Eliminar del inventario", on_click=lambda ap_id=aparato['id']: requests.delete(f"{URL_API}/electrodomesticos/{estado.usuario_actual}/{ap_id}") and st.success("Electrodoméstico eliminado.") and st.cache_data.clear() and st.rerun(), args=None, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
             st.divider()
-            st.subheader("Distribución del Consumo Estimado")
+            st.markdown("<p class='titleSection'>Distribución del Consumo Estimado</p>", unsafe_allow_html=True)
             with st.container(): 
                 if not df_inventario.empty and df_inventario["total_kwh"].sum() > 0:
                     fig_height = 400
@@ -1001,14 +940,11 @@ def mostrar_electrodomesticos():
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("No hay consumo registrado para mostrar un gráfico. Asegúrate de que tus aparatos tengan potencia y horas de uso configuradas.")
-    st.divider()
-
 
 def mostrar_consejos():
-    """Página con consejos de sostenibilidad personalizados con diseño Glassmorphism."""
-    st.title(" ✨ Consejos de Sostenibilidad ✨ ")
+    st.title("Consejos de Sostenibilidad")
 
-    st.subheader("Tu Impacto Energético Promedio")
+    st.markdown("<p class='titleSection'>Tu Impacto Energético Promedio</p>", unsafe_allow_html=True)
     with st.container(): 
         metricas_perfil = cargar_metricas_perfil()
         if metricas_perfil:
@@ -1024,7 +960,7 @@ def mostrar_consejos():
                     mode="gauge+number",
                     value=consumo_promedio,
                     title={'text': "Consumo Mensual Promedio (kWh)"},
-                    gauge={'axis': {'range': [0, 500], 'tickvals': [0, 100, 200, 300, 400, 500]}, # Set max value and tick values
+                    gauge={'axis': {'range': [0, 500], 'tickvals': [0, 100, 200, 300, 400, 500]},
                         'bar': {'color': "#81C784"},
                         'steps': [
                         {'range': [0, 150], 'color': "#E8F5E9"},
@@ -1038,7 +974,7 @@ def mostrar_consejos():
                     mode="gauge+number",
                     value=costo_promedio,
                     title={'text': "Costo Mensual Promedio (ARS)"},
-                    gauge={'axis': {'range': [0, 50000], 'tickvals': [0, 10000, 20000, 30000, 40000, 50000]}, # Set max value and tick values
+                    gauge={'axis': {'range': [0, 50000], 'tickvals': [0, 10000, 20000, 30000, 40000, 50000]},
                         'bar': {'color': "#FFB74D"},
                         'steps': [
                             {'range': [0, 15000], 'color': "#FFF3E0"},
@@ -1052,7 +988,7 @@ def mostrar_consejos():
                     mode="gauge+number",
                     value=huella_promedio,
                     title={'text': "Huella CO₂ Mensual Promedio (kg)"},
-                    gauge={'axis': {'range': [0, 150], 'tickvals': [0, 30, 60, 90, 120, 150]}, # Set max value and tick values
+                    gauge={'axis': {'range': [0, 150], 'tickvals': [0, 30, 60, 90, 120, 150]},
                         'bar': {'color': "#64B5F6"},
                         'steps': [
                             {'range': [0, 45], 'color': "#E3F2FD"},
@@ -1064,9 +1000,7 @@ def mostrar_consejos():
         else:
             st.info("No hay datos suficientes para mostrar el panel de impacto energético. Registra más facturas.")
 
-    st.divider()
-
-    st.subheader("Consejos Personalizados para ti")
+    st.markdown("<p style='text-align: center; padding-bottom: 10px;'>Consejos Recomendables</p>", unsafe_allow_html=True)
     consejos_activos = cargar_consejos()
 
     if consejos_activos is None:
@@ -1076,7 +1010,6 @@ def mostrar_consejos():
         st.info("No hay consejos disponibles por ahora.")
         return
 
-    # Dividir consejos en urgentes y normales no cumplidos
     consejos_urgentes = [c for c in consejos_activos if c.get("urgente") and not c.get("cumplido")]
     consejos_normales = [c for c in consejos_activos if not c.get("urgente") and not c.get("cumplido")]
     consejos_cumplidos = [c for c in consejos_activos if c.get("cumplido")]
@@ -1106,7 +1039,6 @@ def mostrar_consejos():
         st.divider()
 
     if consejos_normales:
-        st.markdown("<h3><span class='glass-icon'>💡</span> Otros Consejos</h3>", unsafe_allow_html=True)
         for i in range(0, len(consejos_normales), 2):
             cols = st.columns(2)
             for j in range(2):
@@ -1150,12 +1082,7 @@ def mostrar_consejos():
                         """, unsafe_allow_html=True)
     st.divider()
 
-
-# ---------- LÓGICA PRINCIPAL DE NAVEGACIÓN ----------
 def mostrar_barra_navegacion():
-    """
-    Barra de navegación en formato «pastillas» minimalista usando botones de Streamlit.
-    """
     tabs = {
         "resumen_general": "🏠 Inicio",
         "perfil": "👤 Perfil",
@@ -1171,7 +1098,6 @@ def mostrar_barra_navegacion():
             if st.button(label, key=f"nav_{key}", on_click=cambiar_pagina, args=(key,), use_container_width=True):
                 pass
     st.markdown('</div>', unsafe_allow_html=True)
-
 
 def main():
     """Función principal que controla la navegación de la aplicación."""

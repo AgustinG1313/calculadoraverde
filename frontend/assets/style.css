@@ -1,0 +1,807 @@
+@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@160..700&display=swap');
+
+:root {
+    --bg-white: #F9F9F9;
+    --text-black: #1a1a1a;
+    --accent-green: #00be5c;
+    --accent-green-dark: #00be5c;
+    --hover-green: #E8F5E9;
+    --gray-light: #EEEEEE;
+    --gray-medium: #BDBDBD;
+    --color-consumo: #64B5F6;
+    --color-costo: #FFB74D;
+    --color-huella: #FF8A65;
+    --color-puntos: #A5D6A7;
+    --accent-red: #EF5350;
+    --text-gray: #555;
+    --border-radius: 1.5rem;
+    --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --transition-speed-fast: 0.2s;
+    --transition-speed-normal: 0.3s;
+    --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --card-hover-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    --card-transition: all 0.3s ease-in-out;
+}
+
+body {
+    font-family: 'Readex Pro', sans-serif;
+    color: var(--text-black);
+    background-color: var(--bg-white);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+.stApp {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+}
+
+h1.main-title,
+p.subtitle,
+[data-testid="stMarkdownContainer"] h1,
+[data-testid="stMarkdownContainer"] h2,
+[data-testid="stMarkdownContainer"] h3
+{
+    text-align: center;
+}
+
+[class^=st-emotion], .st-bp {
+    font-family: 'Readex Pro', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Readex Pro', sans-serif;
+    color: var(--accent-green-dark);
+    margin: 3rem 0rem;
+    font-weight: 600;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    letter-spacing: -2px;
+}
+
+h1.main-title {
+    font-size: 3em;
+    font-weight: 900;
+    letter-spacing: -1px;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    margin: 1rem 0rem;
+}
+
+p.subtitle {
+    font-size: 1.3em;
+    color: var(--text-black);
+    margin-bottom: 3rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+p.titleSection {
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    margin-top: 20px;
+}
+
+.stContainer, .stAlert, .stExpander {
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 1.5rem;
+    background-color: white;
+    border: 1px solid var(--gray-light);
+}
+
+[data-testid="stHelpButton"] {
+    display: none !important;
+}
+
+[data-testid^="stButton-secondary"][key^="hidden_nav_button_"] {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+}
+
+[data-testid^="stButton-secondary"][key^="hidden_nav_button_"] > button {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+}
+
+.stButton > button, .st-emotion-cache-11bf0hs, .st-emotion-cache-v2soli {
+    background-color: var(--bg-white);
+    color: var(--text-black);
+    border: 1px solid var(--gray-medium);
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    transition: background-color var(--transition-speed-fast) ease, transform var(--transition-speed-fast) ease, box-shadow var(--transition-speed-fast) ease;
+    box-shadow: var(--box-shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center; /* Centrado de texto */
+    
+}
+
+.stButton > button:hover, .st-emotion-cache-11bf0hs:hover, .st-emotion-cache-v2soli:hover, .st-emotion-cache-133pb4p:hover {
+    background-color: var(--accent-green-dark);
+    color: var(--bg-white);
+    border-color: var(--accent-green-dark);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+}
+
+.stButton > button:focus:not(:active) {
+    background-color: var(--accent-green-dark);
+    color: var(--bg-white);
+    border-color: var(--accent-green-dark);
+}
+
+/*
+[data-baseweb="base-input"] {
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-medium);
+    padding: 0.6rem 1.2rem;
+    background-color: var(--gray-light);
+    transition: border-color var(--transition-speed-normal);
+    color: var(--text-black);
+    font-size: 1em;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+}
+
+[data-baseweb="base-input"]:focus {
+    border-color: var(--accent-green);
+    outline: none;
+    border-radius: 1.5rem;
+}
+*/
+
+.stTextInput label, .stSelectbox label {
+    font-weight: 600;
+    color: var(--text-black);
+    margin-bottom: 0.5rem;
+    text-align: left; /* Etiquetas alineadas a la izquierda */
+    display: block; /* Asegurar que ocupen toda la línea */
+}
+
+[data-testid="stMetric"] {
+    background-color: #ffffff;
+    border-radius: var(--border-radius);
+    padding: 15px 5px;
+    box-shadow: var(--box-shadow);
+    text-align: center;
+    border: 1px solid #e5e7eb;
+    transition: transform var(--transition-speed-fast);
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.st-ca.st-af.st-c7 {
+    display: none;
+}
+
+[data-testid="stMetric"]:hover {
+    transform: translateY(-5px);
+}
+
+[data-testid="stMetric"] label {
+    font-size: 1.1em;
+    color: var(--text-black);
+    font-weight: 600;
+    grid: none;
+    text-align: center; /* Centrado del label */
+}
+
+[data-testid="stMetric"] div > div {
+    font-weight: 800;
+    text-align: center; /* Centrado del valor */
+}
+
+[data-testid="stMetric"] .stMetricValue {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: var(--accent-green-dark);
+    margin-top: 0.5rem;
+    text-align: center; /* Centrado del valor numérico */
+}
+
+[data-testid="stMetric"] .stMetricDelta {
+    font-size: 1.1em;
+    font-weight: 500;
+    text-align: center; /* Centrado del delta */
+}
+
+.stTabs [data-baseweb="tab-list"] {
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.st-emotion-cache-wnm74r {
+    justify-content: center !important;
+}
+
+.st-emotion-cache-1wivap2 {
+    width: auto !important;
+}
+
+.stTabs [data-baseweb="tab-list"] button {
+    background-color: var(--gray-light);
+    color: var(--text-black);
+    border-radius: var(--border-radius);
+    padding: 0.8rem 1.8rem;
+    font-weight: 600;
+    transition: all var(--transition-speed-normal) ease-in-out;
+    border: none;
+    text-align: center; /* Centrado del texto del tab */
+}
+
+.stTabs [data-baseweb="tab-list"] button:hover {
+    background-color: var(--accent-green-dark);
+    color: var(--bg-white);
+}
+
+.stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+    background-color: var(--accent-green-dark);
+    color: var(--bg-white);
+    box-shadow: var(--box-shadow);
+}
+
+.stSidebar {
+    background-color: #F0F4F0;
+    border-right: 1px solid var(--gray-light);
+    padding: 1.5rem;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.stExpander {
+    border: 1px solid var(--gray-light);
+    background-color: var(--bg-white);
+}
+
+.stExpander > div > div > .streamlit-expanderContent {
+    padding-top: 1rem;
+}
+
+.stFileUploader > div > button {
+    background-color: var(--accent-green);
+    color: var(--bg-white);
+    border-radius: var(--border-radius);
+    padding: 0.85rem 1.5rem;
+    font-weight: 600;
+    transition: background-color var(--transition-speed-fast) ease, transform var(--transition-speed-fast) ease, box-shadow var(--transition-speed-fast) ease;
+    box-shadow: var(--box-shadow);
+    text-align: center; /* Centrado del texto del botón */
+}
+
+.stFileUploader > div > button:hover {
+    background-color: var(--accent-green-dark);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+}
+
+.nav-bar-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    background-color: var(--gray-light);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 0.5rem;
+    margin-bottom: 1.5rem;
+    gap: 0.5rem;
+}
+
+.nav-bar-container > div[data-testid="stVerticalBlock"] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0.5rem 0;
+    flex-grow: 1;
+}
+
+.nav-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: var(--accent-green);
+    margin: 0 auto 0.4rem auto;
+    transition: background-color var(--transition-speed-fast) ease;
+}
+
+.custom-nav-button {
+    width: 100%;
+    background-color: var(--gray-light);
+    color: var(--text-black);
+    border: 1px solid var(--gray-medium);
+    border-radius: var(--border-radius);
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-speed-fast) ease,
+                color var(--transition-speed-fast) ease,
+                box-shadow var(--transition-speed-fast) ease,
+                border-color var(--transition-speed-fast) ease;
+    text-align: center;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.custom-nav-button:hover {
+    background-color: var(--hover-green);
+    color: var(--accent-green-dark);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-color: var(--accent-green);
+}
+
+.custom-nav-button.active {
+    background-color: var(--accent-green-dark);
+    color: var(--bg-white);
+    border-color: var(--accent-green-dark);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    font-weight: 600;
+}
+
+/* --- ESTILOS PARA BOTONES DE NAVEGACIÓN (NAV BAR) --- */
+.nav-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.nav-wrapper > div {
+    flex: 1;
+    max-width: 1200px; /* Limitar el ancho máximo */
+}
+
+.nav-wrapper > div > div {
+    display: flex;
+    gap: 0.5rem; /* Espacio entre botones */
+    flex-wrap: wrap; /* Permitir que los botones se envuelvan en pantallas pequeñas */
+}
+
+.nav-wrapper > div > div > div {
+    flex: 1; /* Cada botón ocupa espacio igual */
+    min-width: 120px; /* Ancho mínimo para evitar que se vuelvan muy pequeños */
+}
+
+.nav-wrapper .stButton > button {
+    width: 100%; /* Botones ocupan todo el ancho de su contenedor */
+    height: 100%; /* Altura completa del contenedor */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1rem 0.5rem;
+    font-size: 0.9em; /* Ajustar tamaño de fuente para mejor ajuste */
+}
+/* --- FIN DE ESTILOS PARA BOTONES DE NAVEGACIÓN --- */
+
+.scrollable-container {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 15px;
+    border-radius: var(--border-radius);
+    background-color: var(--bg-white);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+[data-testid="stVerticalBlock"] > div > [data-testid="stHorizontalBlock"] {
+    background-color: var(--hover-green);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--accent-green);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 1rem;
+    transition: background-color var(--transition-speed-fast) ease, transform var(--transition-speed-fast) ease, box-shadow var(--transition-speed-fast) ease;
+    display: flex;
+    align-items: center; /* Centrado vertical */
+    justify-content: space-between; /* Espacio entre elementos */
+}
+
+[data-testid="stVerticalBlock"] > div > [data-testid="stHorizontalBlock"]:hover {
+    background-color: #DCEADF;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.appliance-item-icon {
+    font-size: 1.8em;
+    color: var(--accent-green-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-width: 40px; /* Ancho mínimo para el icono */
+}
+
+.appliance-item-details {
+    padding: 0.5rem 0;
+    flex-grow: 1; /* Ocupa el espacio restante */
+    text-align: left; /* Texto alineado a la izquierda */
+}
+
+.appliance-item-details strong {
+    font-size: 1.1em;
+    color: var(--text-black);
+    display: block; /* Asegurar que esté en su propia línea */
+    text-align: left; /* Texto alineado a la izquierda */
+}
+
+.appliance-item-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%;
+    min-width: 80px; /* Ancho mínimo para los botones de acción */
+}
+
+.appliance-item-actions .stButton > button {
+    padding: 0.5rem 0.7rem;
+    min-width: unset;
+    font-size: 1.1em;
+    background-color: transparent;
+    color: var(--accent-green-dark);
+    box-shadow: none;
+    border: 1px solid var(--accent-green);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; /* Ancho fijo para botones cuadrados */
+    height: 36px; /* Alto fijo para botones cuadrados */
+}
+
+.appliance-item-actions .stButton > button:hover {
+    background-color: var(--accent-green);
+    color: white;
+    box-shadow: none;
+    transform: none;
+}
+
+/* --- ESTILOS PARA TARJETAS DE CONSEJOS --- */
+.consejo-card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--gray-light);
+    transition: var(--card-transition);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centrado horizontal */
+    text-align: center; /* Centrado del texto */
+}
+
+.consejo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-hover-shadow);
+}
+
+.consejo-card-urgent {
+    border-color: var(--accent-red);
+    background-color: #fff5f5; /* Fondo rojo claro para urgentes */
+}
+
+.consejo-card-completed {
+    opacity: 0.7;
+    background-color: #f9f9f9; /* Fondo gris claro para completados */
+    border: 1px solid #e0e0e0;
+}
+
+.consejo-card-icon {
+    font-size: 2em; /* Tamaño del icono aumentado */
+    color: var(--accent-green-dark);
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centrado del icono */
+    width: 100%; /* Ocupa todo el ancho */
+}
+
+.consejo-card-urgent .consejo-card-icon {
+    color: var(--accent-red);
+}
+
+.consejo-card-text {
+    font-size: 1em;
+    color: var(--text-black);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centrado del texto */
+    width: 100%; /* Ocupa todo el ancho */
+}
+
+.consejo-card-completed .consejo-card-text {
+    color: var(--text-gray);
+}
+
+.consejo-card-checkbox-wrapper {
+    display: flex;
+    justify-content: center; /* Centrado del checkbox */
+    align-items: center;
+    width: 100%;
+    margin-top: auto; /* Empuja el checkbox hacia abajo */
+}
+
+.consejo-card-checkbox-wrapper .stCheckbox label {
+    font-size: 0.9em;
+    color: var(--text-gray);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-direction: row-reverse;
+    justify-content: center; /* Centrado del label del checkbox */
+}
+
+.consejo-card-checkbox-wrapper .stCheckbox input[type="checkbox"] {
+    appearance: none;
+    width: 1.2em;
+    height: 1.2em;
+    border: 2px solid var(--accent-green-dark);
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.consejo-card-checkbox-wrapper .stCheckbox input[type="checkbox"]:checked {
+    background-color: var(--accent-green-dark);
+    border-color: var(--accent-green-dark);
+}
+
+.consejo-card-checkbox-wrapper .stCheckbox input[type="checkbox"]:checked::before {
+    content: '✔';
+    display: block;
+    color: white;
+    font-size: 0.8em;
+    line-height: 1;
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.consejo-card-completed .consejo-card-checkbox-wrapper .stCheckbox input[type="checkbox"] {
+    border-color: var(--text-gray);
+    background-color: var(--text-gray);
+}
+/* --- FIN DE ESTILOS PARA TARJETAS DE CONSEJOS --- */
+
+.profile-info-card {
+    background-color: var(--hover-green);
+    border: 1px solid var(--accent-green);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--box-shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform var(--transition-speed-fast);
+    text-align: left; /* Texto alineado a la izquierda */
+}
+
+.profile-info-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+}
+
+.profile-info-card-icon {
+    font-size: 2em;
+    color: var(--accent-green-dark);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px; /* Ancho mínimo para el icono */
+}
+
+.profile-info-card-content {
+    flex-grow: 1;
+    text-align: left; /* Texto alineado a la izquierda */
+}
+
+.profile-info-card-content strong {
+    display: block;
+    font-size: 1.1em;
+    color: var(--text-black);
+    margin-bottom: 0.2rem;
+    text-align: left; /* Texto alineado a la izquierda */
+}
+
+.profile-info-card-content span {
+    font-size: 0.95em;
+    color: var(--text-gray);
+    text-align: left; /* Texto alineado a la izquierda */
+}
+
+.st-emotion-cache-1kyxreq {
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    background-color: var(--bg-white);
+    padding: 2rem;
+}
+
+.st-emotion-cache-1c7y2kd {
+    border: 2px dashed var(--accent-green);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    background-color: var(--hover-green);
+    text-align: center;
+    transition: all var(--transition-speed-normal);
+}
+
+.st-emotion-cache-1c7y2kd:hover {
+    border-color: var(--accent-green-dark);
+    background-color: #DCEADF;
+}
+
+.stNumberInput > div > label > div > div:first-child > div:first-child,
+.stNumberInput > div > label > div > div:first-child > div:last-child {
+    display: none !important;
+}
+
+[data-baseweb="radio"] > div > div::before,
+[data-baseweb="radio"] > div > div::after,
+[data-baseweb="checkbox"] > div > div::before,
+[data-baseweb="checkbox"] > div > div::after,
+[data-baseweb="select"] div[role="option"]::before,
+[data-baseweb="select"] div[role="option"]::after {
+    content: none !important;
+}
+
+[data-baseweb="select"] div[role="option"] > div {
+    padding: 0 !important;
+}
+
+.st-c2 {
+    background-color: transparent !important;
+}
+
+.stFormSubmitButton > button, .stForm {
+    border-radius: var(--border-radius);
+}
+
+.stAlert {
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    border: none;
+}
+
+.stAlert > div.stAlertContainer {
+    border-radius: var(--border-radius);
+    background-color: rgb(0 190 92 / 25%);
+    color: #006430;
+    text-align: center;
+}
+
+.stTooltipHoverTarget:hover {
+    color: #00b256;
+}
+
+/* --- NUEVOS ESTILOS PARA ÁRBOLES --- */
+
+/* Estilo para la caja de información de árboles */
+.trees-info-box {
+    background-color: var(--hover-green); /* Verde claro de fondo */
+    border: 1px solid var(--accent-green); /* Borde verde */
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin: 2rem 0; /* Espacio arriba y abajo */
+    box-shadow: var(--box-shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    animation: pulse 2s infinite; /* Animación de pulso */
+    text-align: left; /* Texto alineado a la izquierda por defecto */
+}
+
+@keyframes pulse {
+    0% { box-shadow: var(--box-shadow); }
+    50% { box-shadow: 0 0 15px rgba(0, 190, 92, 0.4); } /* Sombra verde brillante */
+    100% { box-shadow: var(--box-shadow); }
+}
+
+
+.trees-info-icon {
+    font-size: 2.5em; /* Tamaño del ícono */
+    color: var(--accent-green-dark); /* Color del ícono */
+    flex-shrink: 0; /* Evita que el ícono se encoja */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px; /* Ancho mínimo para el icono */
+}
+
+.trees-info-content {
+    flex-grow: 1; /* Hace que el contenido ocupe el espacio restante */
+    text-align: left; /* Texto alineado a la izquierda */
+}
+
+.trees-info-content strong {
+    display: block; /* Hace que el texto fuerte esté en una línea */
+    font-size: 1.2em; /* Tamaño del texto fuerte */
+    color: var(--text-black); /* Color del texto */
+    margin-bottom: 0.5rem; /* Espacio debajo del texto fuerte */
+    text-align: left; /* Texto fuerte alineado a la izquierda */
+}
+
+.trees-info-content p {
+    margin: 0; /* Elimina el margen por defecto del párrafo */
+    color: var(--text-gray); /* Color del párrafo */
+    font-size: 1em; /* Tamaño del párrafo */
+    text-align: left; /* Párrafo alineado a la izquierda */
+}
+
+[data-testid="stSidebar"] {
+    display: none;
+}
+
+.st-emotion-cache-ocqkz7 {
+    align-items: center;
+}
+
+.st-emotion-cache-oj1fi {
+    justify-content: flex-end;
+}
+
+.st-ei {
+    border-bottom-color: #00be5c;
+}
+
+.st-eh {
+    border-top-color: #00be5c;
+}
+
+.st-eg {
+    border-right-color: #00be5c;
+}
+
+.st-ef {
+    border-left-color: #00be5c;
+}

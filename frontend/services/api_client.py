@@ -89,8 +89,7 @@ def cargar_metricas_perfil(user_id):
                          .single()\
                          .execute()
         
-        # Versión moderna de Supabase maneja los errores diferente
-        # Verificamos si hay datos primero
+        
         if not response.data:
             st.warning("No se encontraron datos para el usuario")
             return None

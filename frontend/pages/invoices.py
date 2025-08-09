@@ -32,9 +32,7 @@ def mostrar_facturas(estado_app):
         
     print(f"ID de usuario: {estado_app.usuario_actual_id}")  # Debe ser un UUID
     print(f"Tipo de ID: {type(estado_app.usuario_actual_id)}")
-    if not facturas:
-        st.info("Aún no has registrado facturas. ¡Añade una para empezar!")
-        return
+    
     
     df = pd.DataFrame(facturas)
 

@@ -23,7 +23,7 @@ def mostrar_consejos(estado_app):
             facturas = api_client.cargar_datos_facturas(estado_app.usuario_actual_id)
             
             if metricas_perfil and facturas:
-                # ... (mantén tu código existente de las métricas)
+                
                 pass
             else:
                 st.info("""

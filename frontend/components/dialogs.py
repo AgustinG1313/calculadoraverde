@@ -2,10 +2,9 @@
 Componentes de UI para todos los diálogos modales de la aplicación.
 """
 import streamlit as st
-import requests
 import uuid
 from datetime import datetime
-from services.api_client import URL_API
+from services import api_client
 
 @st.dialog("Subir Factura (OCR)")
 def dialogo_subir_ocr():
@@ -23,16 +22,25 @@ def dialogo_configurar_electrodomestico(nombre_aparato, datos_catalogo, estado_a
         
         if st.form_submit_button("Añadir al Inventario", type="primary", use_container_width=True):
             payload = {
-                "id": str(uuid.uuid4()), "nombre": nombre_aparato, "cantidad": cantidad,
-                "potencia": potencia, "eficiencia": "A", "horas_dia": horas_dia, "dias_mes": dias_mes
+                "id": str(uuid.uuid4()),
+                "usuario_id": estado_app.usuario_actual_id,
+                "nombre": nombre_aparato,
+                "cantidad": cantidad,
+                "potencia": potencia,
+                "eficiencia": "A",
+                "horas_dia": horas_dia,
+                "dias_mes": dias_mes
             }
             try:
-                res = requests.post(f"{URL_API}/electrodomesticos/{estado_app.usuario_actual}", json=payload)
-                res.raise_for_status()
-                st.success("Electrodoméstico añadido.")
-                st.cache_data.clear()
-                st.rerun()
-            except requests.RequestException as e:
+                supabase = api_client.get_supabase_client()
+                res = supabase.table("electrodomesticos").insert(payload).execute()
+                if res.data:
+                    st.success("Electrodoméstico añadido.")
+                    st.cache_data.clear()
+                    st.rerun()
+                else:
+                    st.error("Error al añadir electrodoméstico.")
+            except Exception as e:
                 st.error(f"Error al añadir: {e}")
 
 @st.dialog("Editar Electrodoméstico")
@@ -46,16 +54,21 @@ def dialogo_editar_electrodomestico(aparato, estado_app):
         
         if st.form_submit_button("Guardar Cambios", type="primary", use_container_width=True):
             payload = {
-                "cantidad": cantidad, "potencia": potencia,
-                "horas_dia": horas_dia, "dias_mes": dias_mes
+                "cantidad": cantidad,
+                "potencia": potencia,
+                "horas_dia": horas_dia,
+                "dias_mes": dias_mes
             }
             try:
-                res = requests.put(f"{URL_API}/electrodomesticos/{estado_app.usuario_actual}/{aparato['id']}", json=payload)
-                res.raise_for_status()
-                st.success("Electrodoméstico actualizado.")
-                st.cache_data.clear()
-                st.rerun()
-            except requests.RequestException as e:
+                supabase = api_client.get_supabase_client()
+                res = supabase.table("electrodomesticos").update(payload).eq("id", aparato["id"]).execute()
+                if res.data:
+                    st.success("Electrodoméstico actualizado.")
+                    st.cache_data.clear()
+                    st.rerun()
+                else:
+                    st.error("Error al actualizar electrodoméstico.")
+            except Exception as e:
                 st.error(f"Error al actualizar: {e}")
 
 @st.dialog("Registrar Factura")
@@ -70,14 +83,21 @@ def dialogo_registrar_factura(estado_app):
 
         if st.form_submit_button("Guardar Factura", type="primary", use_container_width=True):
             payload = {
-                "id": str(uuid.uuid4()), "mes": mes, "anio": int(anio),
-                "consumo_kwh": consumo_kwh, "costo": costo
+                "id": str(uuid.uuid4()),
+                "usuario_id": estado_app.usuario_actual_id,
+                "mes": mes,
+                "anio": int(anio),
+                "consumo_kwh": consumo_kwh,
+                "costo": costo
             }
             try:
-                res = requests.post(f"{URL_API}/facturas/{estado_app.usuario_actual}", json=payload)
-                res.raise_for_status()
-                st.success("Factura guardada.")
-                st.cache_data.clear()
-                st.rerun()
-            except requests.RequestException as e:
+                supabase = api_client.get_supabase_client()
+                res = supabase.table("facturas").insert(payload).execute()
+                if res.data:
+                    st.success("Factura guardada.")
+                    st.cache_data.clear()
+                    st.rerun()
+                else:
+                    st.error("Error al guardar factura.")
+            except Exception as e:
                 st.error(f"Error al guardar: {e}")

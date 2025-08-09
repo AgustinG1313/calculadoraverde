@@ -1,5 +1,6 @@
 """
 Página de Resumen General (Inicio). Muestra las métricas clave.
+Versión actualizada para Supabase
 """
 import streamlit as st
 import pandas as pd
@@ -7,16 +8,15 @@ import plotly.express as px
 from services import api_client
 
 def mostrar_resumen_general(estado_app):
-    # Cargar datos del perfil para obtener el nombre del usuario
+    # Cargar datos del perfil
     perfil = api_client.cargar_metricas_perfil(estado_app.usuario_actual_id)
     nombre_usuario = perfil.get('nombre', 'Usuario') if perfil else 'Usuario'
     
     st.title(f"¡Bienvenido a BioTrack, {nombre_usuario}! 👋")
-    
-    # --- TEXTOS AÑADIDOS ---
     st.markdown("<p class='titleSection'>Resumen Energético</p>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; margin-bottom: 2rem;'>Acá podes ver un resumen de tu impacto energético y de sostenibilidad.</p>", unsafe_allow_html=True)
     
+    # Cargar métricas
     metricas = api_client.cargar_metricas_resumen(estado_app.usuario_actual_id)
     if not metricas:
         st.warning("No se pudieron cargar las métricas. Añade facturas y electrodomésticos para ver tu resumen.")
@@ -30,8 +30,8 @@ def mostrar_resumen_general(estado_app):
     col4.metric("Puntos 🌱", metricas.get('puntos_sostenibilidad', 0))
 
     # Consejo del día
-    if consejo := metricas.get('consejo_dinamico'):
-        st.info(f"💡 **Consejo del Día:** {consejo['texto']}")
+    if metricas.get('consejo_dinamico'):
+        st.info(f"💡 **Consejo del Día:** {metricas['consejo_dinamico']['texto']}")
 
     # Gráfico de Torta (Consumo por Electrodoméstico)
     st.markdown("<p class='titleSection'>Consumo por Electrodoméstico</p>", unsafe_allow_html=True)
@@ -42,16 +42,3 @@ def mostrar_resumen_general(estado_app):
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("Añade electrodomésticos para ver el desglose de consumo.")
-
-    # Tabla de Resumen de Actividad
-    st.markdown("<p class='titleSection'>Resumen de Actividad</p>", unsafe_allow_html=True)
-    resumen = metricas.get("resumen_actividad", {})
-    if resumen:
-        df_resumen = pd.DataFrame({
-            "Métrica": ["Consumo (kWh)", "Costo (ARS)"],
-            "Facturas (Real)": [resumen.get("facturas_consumo", 0), resumen.get("facturas_costo", 0)],
-            "Estimado (App)": [resumen.get("estimado_consumo", 0), resumen.get("estimado_costo", 0)]
-        }).set_index("Métrica")
-        st.dataframe(df_resumen.style.format("{:,.2f}"), use_container_width=True)
-    else:
-        st.info("No hay datos de actividad.")

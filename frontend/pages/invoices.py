@@ -4,10 +4,9 @@ Página de Facturas. Permite registrar, ver y analizar facturas.
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import requests
 from services import api_client
 from components import dialogs
-from services.api_client import URL_API
+from services.api_client import get_supabase_client
 
 def mostrar_facturas(estado_app):
     st.title("Análisis de Facturas")
@@ -21,7 +20,18 @@ def mostrar_facturas(estado_app):
         if st.button("⬆️ Subir Factura (OCR)", use_container_width=True):
             dialogs.dialogo_subir_ocr()
 
-    facturas = api_client.cargar_datos_facturas(estado_app.usuario_actual)
+    facturas = api_client.cargar_datos_facturas(estado_app.usuario_actual_id)
+    if facturas is None:
+        st.error("Error al cargar facturas. Por favor intenta nuevamente.")
+    elif not facturas:  # Lista vacía
+        st.info("""
+        Aún no has registrado facturas. ¡Añade una para empezar!
+            
+        *Ve a la sección 'Añadir Factura' o importa tus datos históricos*
+        """)
+        
+    print(f"ID de usuario: {estado_app.usuario_actual_id}")  # Debe ser un UUID
+    print(f"Tipo de ID: {type(estado_app.usuario_actual_id)}")
     if not facturas:
         st.info("Aún no has registrado facturas. ¡Añade una para empezar!")
         return
@@ -76,10 +86,13 @@ def mostrar_facturas(estado_app):
             cols[0].write(f"{factura['mes']} {factura['anio']} - {factura['consumo_kwh']} kWh - ${factura['costo']:.2f}")
             if cols[2].button("🗑️", key=f"del_{factura['id']}", help="Eliminar factura"):
                 try:
-                    res = requests.delete(f"{URL_API}/facturas/{estado_app.usuario_actual}/{factura['id']}")
-                    res.raise_for_status()
-                    st.success("Factura eliminada.")
-                    st.cache_data.clear()
-                    st.rerun()
-                except requests.RequestException as e:
-                    st.error(f"Error al eliminar: {e}")
+                    supabase = get_supabase_client()
+                    response = supabase.table("facturas").delete().eq("id", factura["id"]).execute()
+                    if response.error:
+                        st.error(f"Error al eliminar: {response.error.message}")
+                    else:
+                        st.success("Factura eliminada.")
+                        st.cache_data.clear()
+                        st.rerun()
+                except Exception as e:
+                    st.error(f"Error inesperado: {e}")

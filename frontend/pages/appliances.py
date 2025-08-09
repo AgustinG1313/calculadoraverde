@@ -4,15 +4,16 @@ Página de Electrodomésticos. Permite gestionar el inventario de aparatos.
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import requests
 from services import api_client
 from components import dialogs
-from services.api_client import URL_API
 
 def mostrar_electrodomesticos(estado_app):
     st.title("Gestión de Electrodomésticos")
 
     catalogo = api_client.cargar_catalogo_electrodomesticos()
+    if not catalogo:
+        st.warning("No se pudo cargar el catálogo de electrodomésticos")
+        return
     inventario = api_client.cargar_datos_electrodomesticos(estado_app.usuario_actual)
     
     st.markdown("<p class='titleSection'>Añadir desde Catálogo</p>", unsafe_allow_html=True)
@@ -20,8 +21,7 @@ def mostrar_electrodomesticos(estado_app):
         nombres_inventario = {item['nombre'] for item in inventario} if inventario else set()
         opciones_disponibles = [item['nombre'] for item in catalogo if item['nombre'] not in nombres_inventario]
         
-        col_select, col_btn = st.columns([0.8, 0.2]) # Columnas para alinear
-        
+        col_select, col_btn = st.columns([0.8, 0.2])
         with col_select:
             if opciones_disponibles:
                 aparato_seleccionado = st.selectbox(
@@ -55,11 +55,9 @@ def mostrar_electrodomesticos(estado_app):
     perfil_usuario = api_client.cargar_metricas_perfil(estado_app.usuario_actual_id)
     if perfil_usuario and total_kwh_inventario > 0:
         nivel_subsidio = perfil_usuario.get("nivel_subsidio", "medio")
-        payload = {"kwh": total_kwh_inventario, "nivel_subsidio": nivel_subsidio}
-        costo_res = requests.post(f"{URL_API}/calcular/costo", json=payload).json()
-        huella_res = requests.post(f"{URL_API}/calcular/huella_carbono", json=payload).json()
-        costo_estimado = costo_res.get("costo_estimado", 0)
-        huella_kg = huella_res.get("huella_carbono_kg_co2", 0)
+        # Usar funciones locales en api_client para calcular costo y huella
+        costo_estimado = api_client.calcular_costo_rango(total_kwh_inventario, nivel_subsidio)
+        huella_kg = api_client.calcular_huella_carbono(total_kwh_inventario)
 
     m1, m2, m3 = st.columns(3)
     m1.metric("Consumo Estimado", f"{total_kwh_inventario:.2f} kWh/mes")
@@ -77,7 +75,6 @@ def mostrar_electrodomesticos(estado_app):
             st.write(f"**{aparato['nombre']}** (x{aparato['cantidad']})")
         
         with col_actions:
-            # Columnas anidadas para los botones de acción
             action_col1, action_col2 = st.columns(2)
             with action_col1:
                 if st.button("✏️", key=f"edit_{aparato['id']}", help="Editar", use_container_width=True):
@@ -85,12 +82,15 @@ def mostrar_electrodomesticos(estado_app):
             with action_col2:
                 if st.button("🗑️", key=f"del_{aparato['id']}", help="Eliminar", use_container_width=True):
                     try:
-                        res = requests.delete(f"{URL_API}/electrodomesticos/{estado_app.usuario_actual}/{aparato['id']}")
-                        res.raise_for_status()
-                        st.success("Eliminado.")
-                        st.cache_data.clear()
-                        st.rerun()
-                    except requests.RequestException as e:
+                        supabase = api_client.get_supabase_client()
+                        res = supabase.table("electrodomesticos").delete().eq("id", aparato["id"]).execute()
+                        if res.data:
+                            st.success("Eliminado.")
+                            st.cache_data.clear()
+                            st.rerun()
+                        else:
+                            st.error("Error al eliminar electrodoméstico.")
+                    except Exception as e:
                         st.error(f"Error: {e}")
     
     # --- Gráfico de distribución ---

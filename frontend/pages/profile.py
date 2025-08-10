@@ -2,9 +2,10 @@
 Página de Perfil de Usuario. Muestra y permite editar la información del usuario.
 """
 import streamlit as st
-import requests
+
 from services import api_client
-from services.api_client import URL_API
+
+from services import api_client
 
 def mostrar_perfil(estado_app):
     st.title("Mi Perfil")
@@ -77,15 +78,12 @@ def mostrar_perfil(estado_app):
         with st.form("form_edit_perfil"):
             nombre = st.text_input("Nombre", value=datos_perfil.get('nombre', ''))
             ubicacion = st.text_input("Ubicación", value=datos_perfil.get('ubicacion', ''))
-            
             niveles_map = {"N1 (Altos Ingresos)": "alto", "N2 (Bajos Ingresos)": "bajo", "N3 (Ingresos Medios)": "medio"}
             niveles_display_list = list(niveles_map.keys())
             current_nivel_backend = datos_perfil.get('nivel_subsidio', 'medio')
             current_display_name = next((k for k, v in niveles_map.items() if v == current_nivel_backend), niveles_display_list[2])
             index_actual = niveles_display_list.index(current_display_name)
-            
             nuevo_nivel_display = st.selectbox("Nivel de Subsidio", niveles_display_list, index=index_actual)
-
             password = st.text_input("Nueva Contraseña (dejar vacío para no cambiar)", type="password")
 
             if st.form_submit_button("Guardar Cambios", type="primary"):
@@ -98,12 +96,15 @@ def mostrar_perfil(estado_app):
                     payload["password"] = password
 
                 try:
-                    res = requests.put(f"{URL_API}/usuarios/{estado_app.usuario_actual_id}", json=payload)
-                    res.raise_for_status()
-                    st.success("Perfil actualizado.")
-                    st.cache_data.clear()
-                    st.rerun()
-                except requests.RequestException as e:
+                    supabase = api_client.get_supabase_client()
+                    res = supabase.table("usuarios").update(payload).eq("id", estado_app.usuario_actual_id).execute()
+                    if res.data:
+                        st.success("Perfil actualizado.")
+                        st.cache_data.clear()
+                        st.rerun()
+                    else:
+                        st.error("Error al actualizar el perfil.")
+                except Exception as e:
                     st.error(f"Error al actualizar: {e}")
 
     # --- Acciones de Sesión y Pruebas ---
@@ -112,12 +113,4 @@ def mostrar_perfil(estado_app):
         st.cache_data.clear()
         st.rerun()
 
-    if st.button("Generar Datos de Prueba (si no existen)", type="secondary"):
-        try:
-            res = requests.post(f"{URL_API}/generar_datos_prueba/{estado_app.usuario_actual}")
-            res.raise_for_status()
-            st.success(res.json().get("mensaje"))
-            st.cache_data.clear()
-            st.rerun()
-        except requests.RequestException as e:
-            st.error(f"Error al generar datos: {e}")
+   

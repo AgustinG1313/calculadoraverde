@@ -1,57 +1,142 @@
 """
-Módulo para centralizar la comunicación con la API del backend.
-Todas las funciones que realizan peticiones HTTP se encuentran aquí.
+Módulo para centralizar la comunicación con Supabase.
+Todas las funciones que realizan peticiones a la base de datos se encuentran aquí.
 """
 import streamlit as st
-import requests
+from supabase import create_client, Client
+import uuid
 
-URL_API = "http://127.0.0.1:8000"
 
-def _handle_request(method, url, **kwargs):
-    """Función de ayuda para manejar peticiones y errores comunes."""
+
+SUPABASE_URL = "https://qhnkkybzcgjbjdepdewc.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobmtreWJ6Y2dqYmpkZXBkZXdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTI2ODIsImV4cCI6MjA2ODY2ODY4Mn0.2p-yyHnBsWDpGpGN-94F10P-Wzn0H_ej5xSSXcb10NQ"
+
+
+@st.cache_resource
+def get_supabase_client() -> Client:
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
+
+def cargar_datos_facturas(user_id):
     try:
-        respuesta = requests.request(method, url, **kwargs)
-        respuesta.raise_for_status()
-        return respuesta.json()
-    except requests.exceptions.ConnectionError:
-        st.error("Error de conexión: No se pudo conectar al servidor. Asegúrate de que el backend esté activo.")
-        return None
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 404:
-            st.warning("Recurso no encontrado. Puede que el usuario o el dato no existan.")
-        else:
-            st.error(f"Error HTTP: {e.response.status_code} - {e.response.text}")
-        return None
-    except requests.exceptions.RequestException as e:
-        st.error(f"Error inesperado en la petición: {e}")
+        # Validación del UUID
+        uuid.UUID(str(user_id))
+    except ValueError as e:
+        st.error(f"ID de usuario inválido: {user_id}")
         return None
 
-@st.cache_data(ttl=60)
-def cargar_datos_facturas(username):
-    return _handle_request("get", f"{URL_API}/facturas/{username}")
+    try:
+        supabase = get_supabase_client()
+        response = supabase.from_("facturas") \
+                     .select("id, mes, anio, consumo_kwh, costo").eq("usuario_id", user_id).order("anio", desc=True).execute()
 
-@st.cache_data(ttl=60)
+        if not response.data:
+            return []
+
+        # Verificación de estructura
+        required_keys = {'mes', 'anio', 'consumo_kwh', 'costo'}
+        if not all(key in response.data[0] for key in required_keys):
+            st.error("Estructura de facturas incorrecta")
+            return None
+
+        return response.data
+    except Exception as e:
+        st.error(f"Error al cargar facturas: {str(e)}")
+        return None
+        
+    except Exception as e:
+        st.error(f"Error al cargar facturas: {str(e)}")
+        return None
+  
+  
+    
+    
 def cargar_datos_electrodomesticos(username):
-    return _handle_request("get", f"{URL_API}/electrodomesticos/{username}")
+    supabase: Client = get_supabase_client()
+    response = supabase.table("electrodomesticos").select("*").eq("username", username).execute()
+    if response.error:
+        st.error(f"Error al cargar electrodomésticos: {response.error.message}")
+        return None
+    return response.data
 
-@st.cache_data(ttl=3600)
 def cargar_catalogo_electrodomesticos():
-    catalogo = _handle_request("get", f"{URL_API}/catalogo/electrodomesticos")
-    return catalogo[:50] if catalogo else []
+    try:
+        supabase = get_supabase_client()
+        
+        response = supabase.from_("catalogo_electrodomesticos") \
+                         .select("*") \
+                         .limit(50) \
+                         .execute()
+        
+        return response.data
+    except Exception as e:
+        st.error(f"Error al cargar catálogo: {str(e)}")
+        return []
 
 @st.cache_data(ttl=60)
 def cargar_metricas_resumen(user_id):
-    return _handle_request("get", f"{URL_API}/metricas/resumen/{user_id}")
+    try:
+        supabase = get_supabase_client()
+        
+        # Versión actualizada para Supabase v2+
+        response = supabase.from_("metricas_resumen") \
+                         .select("*") \
+                         .eq("usuario_id", user_id) \
+                         .execute()
+        
+        # La respuesta ahora es un objeto con .data y .count
+        if not response.data:
+            st.warning("No se encontraron métricas para este usuario")
+            return None
+            
+        return response.data[0]  # Devuelve el primer registro
+        
+    except Exception as e:
+        st.error(f"Error al cargar métricas: {str(e)}")
+        print(f"Error completo: {e}")  # Para depuración
+        return None
 
 @st.cache_data(ttl=60)
 def cargar_metricas_perfil(user_id):
-    return _handle_request("get", f"{URL_API}/metricas/perfil/{user_id}")
-
+    try:
+        supabase = get_supabase_client()
+        response = supabase.table("cargar_metricas_perfil")\
+                         .select("*")\
+                         .eq("id", user_id)\
+                         .single()\
+                         .execute()
+        
+        
+        if not response.data:
+            st.warning("No se encontraron datos para el usuario")
+            return None
+            
+        return response.data
+        
+    except Exception as e:
+        st.error(f"Error al cargar métricas: {str(e)}")
+        return None
 @st.cache_data(ttl=60)
 def cargar_consejos(user_id):
-    data = _handle_request("get", f"{URL_API}/consejos/{user_id}")
-    return data.get("consejos", []) if data else []
+    try:
+        supabase = get_supabase_client()
+        response = supabase.from_("vista_consejos_personalizados") \
+                         .select("*") \
+                         .eq("usuario_id", user_id) \
+                         .execute()
+        
+        return response.data or []  # Retorna lista vacía si no hay datos
+        
+    except Exception as e:
+        st.error(f"Error al cargar consejos: {str(e)}")
+        return []
 
 def marcar_consejo_cumplido(user_id, consejo_id):
-    url = f"{URL_API}/consejos/{user_id}/marcar_cumplido"
-    return _handle_request("post", url, json={"consejo_id": consejo_id})
+    supabase: Client = get_supabase_client()
+    response = supabase.table("consejos_cumplidos").insert({
+        "user_id": user_id,
+        "consejo_id": consejo_id
+    }).execute()
+    if response.error:
+        st.error(f"Error al marcar consejo cumplido: {response.error.message}")
+        return None
+    return response.data

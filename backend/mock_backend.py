@@ -4,7 +4,9 @@ import uuid
 from datetime import datetime
 from typing import Optional, List, Dict
 import functools
-
+from fastapi import FastAPI, HTTPException
+from frontend.services.api_client import get_supabase_client, cargar_datos_facturas
+from frontend.services.api_client import cargar_datos_electrodomesticos
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -29,21 +31,27 @@ class PeticionLogin(BaseModel):
     password: str
 
 class PeticionRegistro(BaseModel):
-    username: str
+    email: str  # Cambiado de username a email
     password: str
     nombre: str
     ubicacion: str
     nivel_subsidio: str
+    personas: Optional[int] = None  # Nuevo campo
+    lat: Optional[float] = None    # Nuevo campo
+    lon: Optional[float] = None    # Nuevo campo
 
 class Factura(BaseModel):
-    id: str
     mes: str
     anio: int
     consumo_kwh: float
     costo: float
 
-class Electrodomestico(BaseModel):
+class FacturaDB(Factura):
     id: str
+    usuario_id: str
+    created_at: datetime
+    
+class Electrodomestico(BaseModel):
     nombre: str
     cantidad: int
     potencia: float
@@ -51,6 +59,11 @@ class Electrodomestico(BaseModel):
     horas_dia: float
     dias_mes: int
 
+class ElectrodomesticoDB(Electrodomestico):
+    id: str
+    usuario_id: str
+    
+    
 class CalculoKWH(BaseModel):
     kwh: float
     nivel_subsidio: str = "medio"
@@ -344,126 +357,204 @@ def generar_consejos_dinamicos(consumo_actual: float, huella_carbono_actual: flo
 # - ENDPOINTS DE LA API -
 
 # - Autenticación y Perfil -
-@app.post("/login", summary="Autenticar un usuario.")
+@app.post("/login")
 async def login(peticion: PeticionLogin):
-    if peticion.username in db_usuarios and db_usuarios[peticion.username]["password"] == peticion.password:
-        # Devolver el ID único del usuario
-        return {"mensaje": "Inicio de sesión exitoso", "usuario_id": db_usuarios[peticion.username]["id"]}
+    # Buscar usuario por email
+    response = supabase.table('usuarios').select("*").eq('email', peticion.username).execute()
+    
+    if not response.data:
+        raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+    
+    usuario = response.data[0]
+    
+    if usuario['password'] == peticion.password:  # En producción usa verificación de hash
+        return {
+            "mensaje": "Inicio de sesión exitoso", 
+            "usuario_id": usuario['id'],
+            "email": usuario['email'],
+            "nombre": usuario['nombre']
+        }
+    
     raise HTTPException(status_code=401, detail="Credenciales incorrectas")
-
-@app.post("/registro", summary="Registrar un nuevo usuario.")
+@app.post("/registro")
 async def registro(peticion: PeticionRegistro):
-    if peticion.username in db_usuarios:
+    # Verificar si el email ya existe
+    response = supabase.table('usuarios').select("id").eq('email', peticion.email).execute()
+    
+    if response.data:
         raise HTTPException(status_code=409, detail="El usuario ya existe")
     
-    nuevo_usuario_id = f"user-{uuid.uuid4().hex[:8]}"
-    db_usuarios[peticion.username] = {
-        "id": nuevo_usuario_id,
-        "username": peticion.username,
-        "password": peticion.password,
+    # Crear nuevo usuario
+    nuevo_usuario = {
+        "email": peticion.email,
+        "password": peticion.password,  # En producción deberías hashear esto
         "nombre": peticion.nombre,
         "ubicacion": peticion.ubicacion,
         "nivel_subsidio": peticion.nivel_subsidio,
-        "facturas": [],
-        "electrodomesticos": [],
-        "puntos_sostenibilidad": 0,
-        "consejos_cumplidos": [],
-        "progreso_sostenibilidad": [{"fecha": datetime.now().strftime("%Y-%m-%d"), "puntos": 0}]
+        "personas": peticion.personas,
+        "lat": peticion.lat,
+        "lon": peticion.lon,
+        "puntos_sostenibilidad": 0
     }
-    return {"mensaje": "Usuario registrado correctamente", "usuario_id": nuevo_usuario_id}
-
-@app.get("/usuarios/{usuario_id}", summary="Obtener datos de perfil de un usuario por ID.")
+    
+    response = supabase.table('usuarios').insert(nuevo_usuario).execute()
+    
+    return {
+        "mensaje": "Usuario registrado correctamente", 
+        "usuario_id": response.data[0]['id']
+    }
+@app.get("/usuarios/{usuario_id}")
 async def obtener_perfil_usuario(usuario_id: str):
-    for user_data in db_usuarios.values():
-        if user_data["id"] == usuario_id:
-            perfil = user_data.copy()
-            perfil.pop("password")
-            return perfil
-    raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    response = supabase.table('usuarios').select(
+        "id", "email", "nombre", "ubicacion", "lat", "lon", 
+        "personas", "creado_en", "nivel_subsidio", "puntos_sostenibilidad"
+    ).eq('id', usuario_id).execute()
+    
+    if not response.data:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    return response.data[0]
 
-@app.put("/usuarios/{usuario_id}", summary="Actualizar datos de perfil de un usuario por ID.")
+@app.put("/usuarios/{usuario_id}")
 async def actualizar_perfil_usuario(usuario_id: str, datos_actualizados: Dict):
-    for username, user_data in db_usuarios.items():
-        if user_data["id"] == usuario_id:
-            # Solo permitir actualizar campos específicos
-            if "nombre" in datos_actualizados:
-                db_usuarios[username]["nombre"] = datos_actualizados["nombre"]
-            if "ubicacion" in datos_actualizados:
-                db_usuarios[username]["ubicacion"] = datos_actualizados["ubicacion"]
-            if "nivel_subsidio" in datos_actualizados:
-                db_usuarios[username]["nivel_subsidio"] = datos_actualizados["nivel_subsidio"]
-            if "password" in datos_actualizados and datos_actualizados["password"]:
-                db_usuarios[username]["password"] = datos_actualizados["password"]
-            
-            return {"mensaje": "Perfil actualizado correctamente"}
-    raise HTTPException(status_code=404, detail="Usuario no encontrado")
-
+    campos_permitidos = {
+        "nombre", "ubicacion", "lat", "lon", 
+        "personas", "nivel_subsidio", "password"
+    }
+    
+    # Filtrar solo campos permitidos
+    updates = {k: v for k, v in datos_actualizados.items() if k in campos_permitidos}
+    
+    if not updates:
+        raise HTTPException(status_code=400, detail="No se proporcionaron campos válidos para actualizar")
+    
+    response = supabase.table('usuarios').update(updates).eq('id', usuario_id).execute()
+    
+    if not response.data:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    return {"mensaje": "Perfil actualizado correctamente"}
 # --- Facturas ---
-@app.get("/facturas/{username}", summary="Obtener todas las facturas de un usuario.")
-async def obtener_facturas(username: str):
-    user_data = db_usuarios.get(username)
-    if user_data:
-        return user_data["facturas"]
-    raise HTTPException(status_code=404, detail="Usuario no encontrado")
+# Endpoint para obtener facturas
+@app.get("/facturas/{usuario_id}")
+async def obtener_facturas(usuario_id: str):
+    try:
+        facturas = cargar_datos_facturas(usuario_id)
+        if facturas is None:
+            raise HTTPException(status_code=404, detail="Error al cargar facturas")
+        return facturas
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
 
-@app.post("/facturas/{username}", summary="Añadir una nueva factura para un usuario.")
-async def anadir_factura(username: str, factura: Factura):
-    user_data = db_usuarios.get(username)
-    if user_data:
-        db_usuarios[username]["facturas"].append(factura.dict())
-        return {"mensaje": "Factura añadida correctamente"}
-    raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-@app.delete("/facturas/{username}/{factura_id}", summary="Eliminar una factura de un usuario.")
-async def eliminar_factura(username: str, factura_id: str):
-    user_data = db_usuarios.get(username)
-    if user_data:
-        facturas_actualizadas = [f for f in user_data["facturas"] if f["id"] != factura_id]
-        if len(facturas_actualizadas) < len(user_data["facturas"]):
-            db_usuarios[username]["facturas"] = facturas_actualizadas
-            return {"mensaje": "Factura eliminada correctamente"}
-        raise HTTPException(status_code=404, detail="Factura no encontrada para el usuario")
-    raise HTTPException(status_code=404, detail="Usuario no encontrado")
+@app.post("/facturas/{usuario_id}", summary="Añadir una nueva factura para un usuario.")
+async def anadir_factura(usuario_id: str, factura_data: dict):
+    supabase = get_supabase_client()
+    try:
+        # Validar datos primero
+        if not all(key in factura_data for key in ['mes', 'anio', 'consumo_kwh', 'costo']):
+            raise HTTPException(status_code=400, detail="Datos de factura incompletos")
+        
+        # Insertar en Supabase
+        response = supabase.table("facturas").insert({
+            "usuario_id": usuario_id,
+            **factura_data
+        }).execute()
+        
+        return {"mensaje": "Factura creada", "id": response.data[0]['id']}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.delete("/facturas/{usuario_id}/{factura_id}", summary="Eliminar una factura de un usuario.")
+async def eliminar_factura(usuario_id: str, factura_id: str):
+    try:
+        # Verificar que la factura pertenece al usuario
+        factura_response = supabase.table('facturas').select("id").eq('id', factura_id).eq('usuario_id', usuario_id).execute()
+        if not factura_response.data:
+            raise HTTPException(status_code=404, detail="Factura no encontrada para el usuario")
 
+        # Eliminar factura
+        supabase.table('facturas').delete().eq('id', factura_id).execute()
+        return {"mensaje": "Factura eliminada correctamente"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al eliminar factura: {str(e)}")
+    
+    
+    
 # --- Electrodomésticos ---
-@app.get("/electrodomesticos/{username}", summary="Obtener todos los electrodomésticos de un usuario.")
-async def obtener_electrodomesticos_usuario(username: str):
-    user_data = db_usuarios.get(username)
-    if user_data:
-        return user_data["electrodomesticos"]
-    raise HTTPException(status_code=404, detail="Usuario no encontrado")
+@app.get("/electrodomesticos/{usuario_id}")
+async def obtener_electrodomesticos(usuario_id: str):
+    try:
+        electrodomesticos = cargar_datos_electrodomesticos(usuario_id)
+        if electrodomesticos is None:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        return electrodomesticos
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
+    
+@app.post("/electrodomesticos/{usuario_id}", summary="Añadir un nuevo electrodoméstico a un usuario.")
+async def anadir_electrodomestico(usuario_id: str, electrodomestico: Electrodomestico):
+    try:
+        # Verificar que el usuario existe
+        user_response = supabase.table('usuarios').select("id").eq('id', usuario_id).execute()
+        if not user_response.data:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-@app.post("/electrodomesticos/{username}", summary="Añadir un nuevo electrodoméstico a un usuario.")
-async def anadir_electrodomestico(username: str, electrodomestico: Electrodomestico):
-    user_data = db_usuarios.get(username)
-    if user_data:
-        db_usuarios[username]["electrodomesticos"].append(electrodomestico.dict())
-        return {"mensaje": "Electrodoméstico añadido correctamente"}
-    raise HTTPException(status_code=404, detail="Usuario no encontrado")
-
-@app.put("/electrodomesticos/{username}/{electrodomestico_id}", summary="Actualizar un electrodoméstico de un usuario.")
-async def actualizar_electrodomestico(username: str, electrodomestico_id: str, datos_actualizados: Dict):
-    for user_data in db_usuarios.values():
-        if user_data["username"] == username:
-            for i, ed in enumerate(user_data["electrodomesticos"]):
-                if ed["id"] == electrodomestico_id:
-                    user_data["electrodomesticos"][i].update(datos_actualizados)
-                    return {"mensaje": "Electrodoméstico actualizado correctamente"}
+        # Insertar electrodoméstico
+        electrodomestico_data = {
+            "usuario_id": usuario_id,
+            "nombre": electrodomestico.nombre,
+            "cantidad": electrodomestico.cantidad,
+            "potencia": electrodomestico.potencia,
+            "eficiencia": electrodomestico.eficiencia,
+            "horas_dia": electrodomestico.horas_dia,
+            "dias_mes": electrodomestico.dias_mes
+        }
+        
+        response = supabase.table('electrodomesticos').insert(electrodomestico_data).execute()
+        return {"mensaje": "Electrodoméstico añadido correctamente", "electrodomestico_id": response.data[0]['id']}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al añadir electrodoméstico: {str(e)}")
+    
+    
+    
+@app.put("/electrodomesticos/{usuario_id}/{electrodomestico_id}", summary="Actualizar un electrodoméstico de un usuario.")
+async def actualizar_electrodomestico(usuario_id: str, electrodomestico_id: str, datos_actualizados: Dict):
+    try:
+        # Verificar que el electrodoméstico pertenece al usuario
+        ed_response = supabase.table('electrodomesticos').select("id").eq('id', electrodomestico_id).eq('usuario_id', usuario_id).execute()
+        if not ed_response.data:
             raise HTTPException(status_code=404, detail="Electrodoméstico no encontrado para el usuario")
-    raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
+        # Actualizar electrodoméstico
+        supabase.table('electrodomesticos').update(datos_actualizados).eq('id', electrodomestico_id).execute()
+        return {"mensaje": "Electrodoméstico actualizado correctamente"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al actualizar electrodoméstico: {str(e)}")
+    
+    
+    
+    
+@app.delete("/electrodomesticos/{usuario_id}/{electrodomestico_id}", summary="Eliminar un electrodoméstico de un usuario.")
+async def eliminar_electrodomestico(usuario_id: str, electrodomestico_id: str):
+    try:
+        # Verificar que el electrodoméstico pertenece al usuario
+        ed_response = supabase.table('electrodomesticos').select("id").eq('id', electrodomestico_id).eq('usuario_id', usuario_id).execute()
+        if not ed_response.data:
+            raise HTTPException(status_code=404, detail="Electrodoméstico no encontrado para el usuario")
 
-@app.delete("/electrodomesticos/{username}/{electrodomestico_id}", summary="Eliminar un electrodoméstico de un usuario.")
-async def eliminar_electrodomestico(username: str, electrodomestico_id: str):
-    user_data = db_usuarios.get(username)
-    if user_data:
-        eds_actualizados = [ed for ed in user_data["electrodomesticos"] if ed["id"] != electrodomestico_id]
-        if len(eds_actualizados) < len(user_data["electrodomesticos"]):
-            db_usuarios[username]["electrodomesticos"] = eds_actualizados
-            return {"mensaje": "Electrodoméstico eliminado correctamente"}
-        raise HTTPException(status_code=404, detail="Electrodoméstico no encontrado para el usuario")
-    raise HTTPException(status_code=404, detail="Usuario no encontrado")
-
+        # Eliminar electrodoméstico
+        supabase.table('electrodomesticos').delete().eq('id', electrodomestico_id).execute()
+        return {"mensaje": "Electrodoméstico eliminado correctamente"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al eliminar electrodoméstico: {str(e)}")
+    
+    
+    
 @app.get("/catalogo/electrodomesticos", summary="Obtener el catálogo de electrodomésticos.")
 async def obtener_catalogo_electrodomesticos():
     return BASE_ELECTRODOMESTICOS
@@ -614,45 +705,59 @@ async def obtener_metricas_perfil(usuario_id: str):
         }
     raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-@app.post("/generar_datos_prueba/{username}", summary="Generar datos de prueba para un usuario.")
-async def generar_datos_prueba(username: str):
-    user_data = db_usuarios.get(username)
-    if not user_data:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+@app.post("/generar_datos_prueba/{usuario_id}", summary="Generar datos de prueba para un usuario.")
+async def generar_datos_prueba(usuario_id: str):
+    try:
+        # Verificar que el usuario existe
+        user_response = supabase.table('usuarios').select("id").eq('id', usuario_id).execute()
+        if not user_response.data:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    if not user_data["facturas"]:
-        meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
-        for i in range(6):
+        # Generar facturas de prueba
+        meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+        
+        user_data = user_response.data[0]
+        facturas_prueba = []
+        
+        for i in range(6):  # Últimos 6 meses
             consumo_kwh = random.uniform(100, 400)
             costo = calcular_costo_rango(consumo_kwh, user_data["nivel_subsidio"], user_data["ubicacion"])
-            user_data["facturas"].append({
-                "id": str(uuid.uuid4()),
+            
+            factura_data = {
+                "usuario_id": usuario_id,
                 "mes": meses[i],
-                "anio": 2024,
+                "anio": datetime.now().year,
                 "consumo_kwh": round(consumo_kwh, 2),
                 "costo": round(costo, 2)
-            })
-    
-    if not user_data["electrodomesticos"]:
+            }
+            facturas_prueba.append(factura_data)
+        
+        # Insertar facturas de prueba
+        supabase.table('facturas').insert(facturas_prueba).execute()
+
+        # Generar electrodomésticos de prueba
+        electrodomesticos_prueba = []
         for item in random.sample(BASE_ELECTRODOMESTICOS, k=min(5, len(BASE_ELECTRODOMESTICOS))):
             cantidad = random.randint(1, 2)
             horas_dia = item.get("horas_dia_estandar", random.uniform(1, 10))
             dias_mes = item.get("dias_mes_estandar", random.randint(15, 30))
             potencia_w = item.get("potencia_base", 0.0)
             
-            consumo_activo_kwh = (potencia_w * horas_dia * dias_mes * cantidad) / 1000
-            
-            user_data["electrodomesticos"].append({
-                "id": str(uuid.uuid4()),
+            electrodomestico_data = {
+                "usuario_id": usuario_id,
                 "nombre": item["nombre"],
                 "cantidad": cantidad,
                 "potencia": potencia_w,
                 "eficiencia": item["eficiencia_estandar"],
                 "horas_dia": round(horas_dia, 1),
-                "dias_mes": dias_mes,
-                "consumo_kwh": round(consumo_activo_kwh, 2),
-                "standby_kwh": 0.0,
-                "total_kwh": round(consumo_activo_kwh, 2)
-            })
-    
-    return {"mensaje": "Datos de prueba generados exitosamente."}
+                "dias_mes": dias_mes
+            }
+            electrodomesticos_prueba.append(electrodomestico_data)
+        
+        # Insertar electrodomésticos de prueba
+        supabase.table('electrodomesticos').insert(electrodomesticos_prueba).execute()
+
+        return {"mensaje": "Datos de prueba generados exitosamente"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar datos de prueba: {str(e)}")

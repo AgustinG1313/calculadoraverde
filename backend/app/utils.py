@@ -6,6 +6,10 @@ import random
 import functools
 from datetime import datetime
 from typing import List, Dict
+from supabase import create_client, Client
+
+SUPABASE_URL = "https://qhnkkybzcgjbjdepdewc.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobmtreWJ6Y2dqYmpkZXBkZXdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTI2ODIsImV4cCI6MjA2ODY2ODY4Mn0.2p-yyHnBsWDpGpGN-94F10P-Wzn0H_ej5xSSXcb10NQ"
 
 @functools.lru_cache(maxsize=128)
 def calcular_costo_rango(kwh: float, nivel_subsidio: str, ubicacion: str = "Resistencia, Chaco") -> float:
@@ -99,3 +103,24 @@ def generar_consejos_dinamicos(consumo_actual: float, huella_carbono_actual: flo
         c["cumplido"] = c["id"] in consejos_cumplidos_ids
 
     return all_consejos
+
+def obtener_datos_usuario(user_id: str):
+    usuario_resp = supabase.table("usuarios").select("*").eq("id", user_id).single().execute()
+    usuario = usuario_resp.data if usuario_resp.data else {}
+    facturas_resp = supabase.table("facturas").select("*").eq("usuario_id", user_id).execute()
+    facturas = facturas_resp.data if facturas_resp.data else []
+    consejos_cumplidos_resp = supabase.table("consejos_cumplidos").select("consejo_id").eq("usuario_id", user_id).execute()
+    consejos_cumplidos_ids = [c["consejo_id"] for c in consejos_cumplidos_resp.data] if consejos_cumplidos_resp.data else []
+
+    consumo_actual = sum(f["consumo_kwh"] for f in facturas)
+    huella = calcular_huella_carbono(consumo_actual)
+    puntos = usuario.get("puntos_sostenibilidad", 0)
+    consejos = generar_consejos_dinamicos(consumo_actual, huella, puntos, consejos_cumplidos_ids)
+
+    return {
+        "usuario": usuario,
+        "facturas": facturas,
+        "consumo_actual": consumo_actual,
+        "huella": huella,
+        "consejos": consejos
+    }

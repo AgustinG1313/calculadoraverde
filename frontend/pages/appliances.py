@@ -10,11 +10,17 @@ from components import dialogs
 def mostrar_electrodomesticos(estado_app):
     st.title("Gestión de Electrodomésticos")
 
+    # Validar que tenemos un usuario_id válido
+    if not hasattr(estado_app, 'usuario_actual_id') or not estado_app.usuario_actual_id:
+        st.error("No se pudo identificar al usuario")
+        return
+
     catalogo = api_client.cargar_catalogo_electrodomesticos()
     if not catalogo:
         st.warning("No se pudo cargar el catálogo de electrodomésticos")
         return
-    inventario = api_client.cargar_datos_electrodomesticos(estado_app.usuario_actual)
+    
+    inventario = api_client.cargar_datos_electrodomesticos(estado_app.usuario_actual_id)
     
     st.markdown("<p class='titleSection'>Añadir desde Catálogo</p>", unsafe_allow_html=True)
     if catalogo:
@@ -55,7 +61,6 @@ def mostrar_electrodomesticos(estado_app):
     perfil_usuario = api_client.cargar_metricas_perfil(estado_app.usuario_actual_id)
     if perfil_usuario and total_kwh_inventario > 0:
         nivel_subsidio = perfil_usuario.get("nivel_subsidio", "medio")
-        # Usar funciones locales en api_client para calcular costo y huella
         costo_estimado = api_client.calcular_costo_rango(total_kwh_inventario, nivel_subsidio)
         huella_kg = api_client.calcular_huella_carbono(total_kwh_inventario)
 
@@ -81,18 +86,13 @@ def mostrar_electrodomesticos(estado_app):
                     dialogs.dialogo_editar_electrodomestico(aparato.to_dict(), estado_app)
             with action_col2:
                 if st.button("🗑️", key=f"del_{aparato['id']}", help="Eliminar", use_container_width=True):
-                    try:
-                        supabase = api_client.get_supabase_client()
-                        res = supabase.table("electrodomesticos").delete().eq("id", aparato["id"]).execute()
-                        if res.data:
-                            st.success("Eliminado.")
-                            st.cache_data.clear()
-                            st.rerun()
-                        else:
-                            st.error("Error al eliminar electrodoméstico.")
-                    except Exception as e:
-                        st.error(f"Error: {e}")
-    
+                    if api_client.eliminar_electrodomestico(aparato["id"]):
+                        st.success("Electrodoméstico eliminado")
+                        st.cache_data.clear()
+                        st.rerun()
+                    else:
+                        st.error("Error al eliminar")
+
     # --- Gráfico de distribución ---
     st.markdown("<p class='titleSection'>Distribución del Consumo Estimado</p>", unsafe_allow_html=True)
     if not df_inventario.empty and df_inventario["total_kwh"].sum() > 0:

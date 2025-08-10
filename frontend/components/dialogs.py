@@ -5,11 +5,112 @@ import streamlit as st
 import uuid
 from datetime import datetime
 from services import api_client
+from ocr import *
+
+
+
+def process_invoice_sync(file_path: str) -> dict:
+    """Versión síncrona para Streamlit"""
+    img = Image.open(file_path)
+    text = pytesseract.image_to_string(img)
+    
+    total_kwh = extract_kwh(text)
+    desglose = extract_items(text)
+
+    return {
+        "total_kwh": total_kwh,
+        "desglose": desglose,
+        "raw_text": text
+    }
+    
+
 
 @st.dialog("Subir Factura (OCR)")
-def dialogo_subir_ocr():
-    st.file_uploader("Arrastra tu archivo o haz clic para buscar", type=["pdf", "png", "jpg"], key="ocr_uploader")
-    st.info("Funcionalidad de procesamiento OCR en desarrollo.")
+def dialogo_subir_ocr(estado_app):
+    """Muestra el uploader de archivos OCR con acceso al estado"""
+    # Verificar autenticación
+    if not hasattr(estado_app, 'usuario_actual_id') or not estado_app.usuario_actual_id:
+        st.error("🔒 Debes iniciar sesión para subir facturas")
+        return
+    
+    uploaded_file = st.file_uploader(
+        "Arrastra tu archivo o haz clic para buscar", 
+        type=["pdf", "png", "jpg", "jpeg"], 
+        key="ocr_uploader"
+    )
+    
+    if uploaded_file is not None:
+        mostrar_formulario_ocr(uploaded_file, estado_app)
+    else:
+        st.info("📌 Sube una imagen o PDF de tu factura para extraer la información automáticamente")
+
+def mostrar_formulario_ocr(uploaded_file, estado_app):
+    """Muestra el formulario de resultados del OCR con capacidad de guardado"""
+    try:
+        with st.spinner("Procesando factura..."):
+            # Guardar archivo temporalmente
+            suffix = os.path.splitext(uploaded_file.name)[1]
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                tmp.write(uploaded_file.getvalue())
+                tmp_path = tmp.name
+            
+            # Procesar factura
+            resultado = process_invoice(tmp_path)
+            os.unlink(tmp_path)  # Eliminar archivo temporal
+
+            # Mostrar resultados
+            st.success("✅ Factura procesada correctamente")
+            
+            with st.expander("📄 Datos extraídos", expanded=True):
+                col1, col2 = st.columns(2)
+                col1.metric("Consumo kWh", resultado.get("total_kwh", 0))
+                
+                # Mostrar texto OCR
+                with col2:
+                    raw_text = resultado.get("raw_text", "No se extrajo texto")
+                    st.text_area("Texto reconocido", 
+                               value="\n".join(raw_text.split("\n")[:10]) + "..." if raw_text else "N/A",
+                               height=100)
+                
+                # Mostrar desglose
+                st.subheader("🧾 Desglose de conceptos")
+                for item in resultado.get("desglose", []):
+                    st.write(f"- **{item.get('concepto', 'Concepto')}**: ${item.get('importe', 0):,.2f}")
+
+            # Botón para guardar (usando la misma estructura que el manual)
+            if st.button("💾 Guardar factura", type="primary"):
+                meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+                        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+                
+                payload = {
+                    "id": str(uuid.uuid4()),
+                    "usuario_id": estado_app.usuario_actual_id,  # Usamos estado_app como en el manual
+                    "mes": meses[datetime.now().month - 1],  # Mes actual (podría extraerse del OCR)
+                    "anio": datetime.now().year,  # Año actual (podría extraerse del OCR)
+                    "consumo_kwh": float(resultado.get("total_kwh", 0)),
+                    "costo": sum(float(item.get("importe", 0)) for item in resultado.get("desglose", []))
+                }
+                
+                try:
+                    supabase = api_client.get_supabase_client()
+                    res = supabase.table("facturas").insert(payload).execute()
+                    if res.data:
+                        st.success("Factura guardada correctamente en la base de datos")
+                        st.cache_data.clear()
+                        # Limpiar el file uploader
+                        if 'ocr_uploader' in st.session_state:
+                            del st.session_state.ocr_uploader
+                        st.rerun()
+                    else:
+                        st.error("Error al guardar en la base de datos")
+                except Exception as e:
+                    st.error(f"Error de conexión con la base de datos: {str(e)}")
+                
+    except Exception as e:
+        st.error(f"❌ Error al procesar la factura: {str(e)}")
+        # Limpiar archivo temporal si existe
+        if 'tmp_path' in locals() and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
 @st.dialog("Configurar Electrodoméstico")
 def dialogo_configurar_electrodomestico(nombre_aparato, datos_catalogo, estado_app):

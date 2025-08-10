@@ -4,36 +4,52 @@ Todas las funciones que realizan peticiones a la base de datos se encuentran aqu
 """
 import streamlit as st
 from supabase import create_client, Client
+import uuid
+
+
 
 SUPABASE_URL = "https://qhnkkybzcgjbjdepdewc.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobmtreWJ6Y2dqYmpkZXBkZXdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTI2ODIsImV4cCI6MjA2ODY2ODY4Mn0.2p-yyHnBsWDpGpGN-94F10P-Wzn0H_ej5xSSXcb10NQ"
 
 
 @st.cache_resource
-def get_supabase_client():
+def get_supabase_client() -> Client:
     return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def cargar_datos_facturas(user_id):
     try:
-        # Validación adicional del UUID
-        import uuid
-        try:
-            uuid.UUID(str(user_id))  # Esto validará el formato UUID
-        except ValueError as e:
-            st.error(f"ID de usuario inválido: {user_id}")
-            return None
+        # Validación del UUID
+        uuid.UUID(str(user_id))
+    except ValueError as e:
+        st.error(f"ID de usuario inválido: {user_id}")
+        return None
 
+    try:
         supabase = get_supabase_client()
         response = supabase.from_("facturas") \
-                         .select("*") \
-                         .eq("usuario_id", user_id) \
-                         .execute()
-        
+                     .select("id, mes, anio, consumo_kwh, costo").eq("usuario_id", user_id).order("anio", desc=True).execute()
+
+        if not response.data:
+            return []
+
+        # Verificación de estructura
+        required_keys = {'mes', 'anio', 'consumo_kwh', 'costo'}
+        if not all(key in response.data[0] for key in required_keys):
+            st.error("Estructura de facturas incorrecta")
+            return None
+
         return response.data
     except Exception as e:
         st.error(f"Error al cargar facturas: {str(e)}")
         return None
-
+        
+    except Exception as e:
+        st.error(f"Error al cargar facturas: {str(e)}")
+        return None
+  
+  
+    
+    
 def cargar_datos_electrodomesticos(username):
     supabase: Client = get_supabase_client()
     response = supabase.table("electrodomesticos").select("*").eq("username", username).execute()

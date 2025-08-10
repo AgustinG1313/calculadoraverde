@@ -18,9 +18,6 @@
     --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
     --transition-speed-fast: 0.2s;
     --transition-speed-normal: 0.3s;
-    --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    --card-hover-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-    --card-transition: all 0.3s ease-in-out;
 }
 
 body {
@@ -89,8 +86,7 @@ p.titleSection {
     text-align: center;
     font-weight: 700;
     font-size: 1.5rem;
-    margin-top: 30px;
-    margin-bottom: 20px; /* Añadido para separar del contenido */
+    margin-top: 30px
 }
 
 .stContainer, .stAlert, .stExpander {
@@ -118,7 +114,6 @@ p.titleSection {
     left: -9999px !important;
     top: -9999px !important;
 }
-
 [data-testid^="stButton-secondary"][key^="hidden_nav_button_"] > button {
     display: none !important;
     visibility: hidden !important;
@@ -131,7 +126,7 @@ p.titleSection {
 }
 
 .stButton > button {
-    background-color: var(--bg-white);
+    background-color: var((--bg-white));
     color: var(--text-black);
     border: 1px solid var(--gray-medium);
     border-radius: var(--border-radius);
@@ -141,8 +136,6 @@ p.titleSection {
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center; /* Centrado de texto */
-    padding: 0.75rem 1rem; /* Ajuste de padding para mejor aspecto */
 }
 
 .stButton > button:hover {
@@ -175,8 +168,6 @@ p.titleSection {
     font-weight: 600;
     color: var(--text-black);
     margin-bottom: 0.5rem;
-    text-align: left; /* Etiquetas alineadas a la izquierda */
-    display: block; /* Asegurar que ocupen toda la línea */
 }
 
 [data-testid="stMetric"] {
@@ -207,12 +198,10 @@ p.titleSection {
     color: var(--text-black);
     font-weight: 600;
     grid: none;
-    text-align: center; /* Centrado del label */
 }
 
 [data-testid="stMetric"] div > div {
     font-weight: 800;
-    text-align: center; /* Centrado del valor */
 }
 
 [data-testid="stMetric"] .stMetricValue {
@@ -220,13 +209,11 @@ p.titleSection {
     font-weight: bold;
     color: var(--accent-green-dark);
     margin-top: 0.5rem;
-    text-align: center; /* Centrado del valor numérico */
 }
 
 [data-testid="stMetric"] .stMetricDelta {
     font-size: 1.1em;
     font-weight: 500;
-    text-align: center; /* Centrado del delta */
 }
 
 .stTabs [data-baseweb="tab-list"] {
@@ -251,7 +238,6 @@ p.titleSection {
     font-weight: 600;
     transition: all var(--transition-speed-normal) ease-in-out;
     border: none;
-    text-align: center; /* Centrado del texto del tab */
 }
 
 .stTabs [data-baseweb="tab-list"] button:hover {
@@ -289,7 +275,6 @@ p.titleSection {
     font-weight: 600;
     transition: background-color var(--transition-speed-fast) ease, transform var(--transition-speed-fast) ease, box-shadow var(--transition-speed-fast) ease;
     box-shadow: var(--box-shadow);
-    text-align: center; /* Centrado del texto del botón */
 }
 
 .stFileUploader > div > button:hover {
@@ -365,41 +350,6 @@ p.titleSection {
     font-weight: 600;
 }
 
-/* --- ESTILOS PARA BOTONES DE NAVEGACIÓN (NAV BAR) --- */
-.nav-wrapper {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 2rem;
-}
-
-.nav-wrapper > div {
-    flex: 1;
-    max-width: 1200px; /* Limitar el ancho máximo */
-}
-
-.nav-wrapper > div > div {
-    display: flex;
-    gap: 0.5rem; /* Espacio entre botones */
-    flex-wrap: wrap; /* Permitir que los botones se envuelvan en pantallas pequeñas */
-}
-
-.nav-wrapper > div > div > div {
-    flex: 1; /* Cada botón ocupa espacio igual */
-    min-width: 120px; /* Ancho mínimo para evitar que se vuelvan muy pequeños */
-}
-
-.nav-wrapper .stButton > button {
-    width: 100%; /* Botones ocupan todo el ancho de su contenedor */
-    height: 100%; /* Altura completa del contenedor */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 1rem 0.5rem;
-    font-size: 0.9em; /* Ajustar tamaño de fuente para mejor ajuste */
-}
-/* --- FIN DE ESTILOS PARA BOTONES DE NAVEGACIÓN --- */
-
 .scrollable-container {
     max-height: 400px;
     overflow-y: auto;
@@ -417,9 +367,6 @@ p.titleSection {
     margin-bottom: 0.75rem;
     padding: 0.5rem 1rem;
     transition: background-color var(--transition-speed-fast) ease, transform var(--transition-speed-fast) ease, box-shadow var(--transition-speed-fast) ease;
-    display: flex;
-    align-items: center; /* Centrado vertical */
-    justify-content: space-between; /* Espacio entre elementos */
 }
 
 [data-testid="stVerticalBlock"] > div > [data-testid="stHorizontalBlock"]:hover {
@@ -435,20 +382,15 @@ p.titleSection {
     align-items: center;
     justify-content: center;
     height: 100%;
-    min-width: 40px; /* Ancho mínimo para el icono */
 }
 
 .appliance-item-details {
     padding: 0.5rem 0;
-    flex-grow: 1; /* Ocupa el espacio restante */
-    text-align: left; /* Texto alineado a la izquierda */
 }
 
 .appliance-item-details strong {
     font-size: 1.1em;
     color: var(--text-black);
-    display: block; /* Asegurar que esté en su propia línea */
-    text-align: left; /* Texto alineado a la izquierda */
 }
 
 .appliance-item-actions {
@@ -457,7 +399,6 @@ p.titleSection {
     justify-content: flex-end;
     align-items: center;
     height: 100%;
-    min-width: 80px; /* Ancho mínimo para los botones de acción */
 }
 
 .appliance-item-actions .stButton > button {
@@ -469,11 +410,6 @@ p.titleSection {
     box-shadow: none;
     border: 1px solid var(--accent-green);
     border-radius: var(--border-radius);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px; /* Ancho fijo para botones cuadrados */
-    height: 36px; /* Alto fijo para botones cuadrados */
 }
 
 .appliance-item-actions .stButton > button:hover {
@@ -483,78 +419,70 @@ p.titleSection {
     transform: none;
 }
 
-/* --- ESTILOS PARA TARJETAS DE CONSEJOS --- */
-.consejo-card {
-    background-color: white;
+.stContainer > div > div > div > [data-testid="stVerticalBlock"] {
     border-radius: var(--border-radius);
-    padding: 1.2rem;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--card-shadow);
+    box-shadow: var(--box-shadow);
+    background-color: var(--bg-white);
     border: 1px solid var(--gray-light);
-    transition: var(--card-transition);
-    position: relative;
-    overflow: hidden;
+    padding: 1.2rem;
+    margin-bottom: 1rem;
     display: flex;
     flex-direction: column;
-    align-items: center; /* Centrado horizontal */
-    text-align: center; /* Centrado del texto */
+    align-items: flex-start;
+    gap: 0.5rem;
+    transition: transform var(--transition-speed-fast) ease, box-shadow var(--transition-speed-fast) ease;
+    height: 100%;
+    justify-content: space-between;
 }
 
-.consejo-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--card-hover-shadow);
-}
-
-.consejo-card-urgent {
-    border-color: var(--accent-red);
-    background-color: #fff5f5; /* Fondo rojo claro para urgentes */
-}
-
-.consejo-card-completed {
-    opacity: 0.7;
-    background-color: #f9f9f9; /* Fondo gris claro para completados */
-    border: 1px solid #e0e0e0;
-}
-
-.consejo-card-icon {
-    font-size: 2em; /* Tamaño del icono aumentado */
-    color: var(--accent-green-dark);
-    margin-bottom: 0.8rem;
+.consejo-card-inner-content {
     display: flex;
-    align-items: center;
-    justify-content: center; /* Centrado del icono */
-    width: 100%; /* Ocupa todo el ancho */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    flex-grow: 1;
 }
 
-.consejo-card-urgent .consejo-card-icon {
+.consejo-card-inner-content .consejo-card-icon {
+    font-size: 2em;
+    color: var(--accent-green-dark);
+    flex-shrink: 0;
+    margin-bottom: 0.5rem;
+}
+
+.consejo-card-inner-content .consejo-card-text {
+    flex-grow: 1;
+    font-size: 1.1em;
+    color: var(--text-black);
+}
+
+.stContainer > div > div > div > [data-testid="stVerticalBlock"].urgente {
+    border-color: var(--accent-red);
+    background-color: #fff5f5;
+}
+
+.stContainer > div > div > div > [data-testid="stVerticalBlock"].urgente .consejo-card-icon {
     color: var(--accent-red);
 }
 
-.consejo-card-text {
-    font-size: 1em;
-    color: var(--text-black);
-    margin-bottom: 1rem;
-    line-height: 1.5;
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center; /* Centrado del texto */
-    width: 100%; /* Ocupa todo el ancho */
+.stContainer > div > div > div > [data-testid="stVerticalBlock"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.consejo-card-completed .consejo-card-text {
-    color: var(--text-gray);
-}
-
-.consejo-card-checkbox-wrapper {
-    display: flex;
-    justify-content: center; /* Centrado del checkbox */
-    align-items: center;
+.stContainer > div > div > div > [data-testid="stVerticalBlock"] > div[data-testid="stCheckbox"] {
+    margin-top: auto;
     width: 100%;
-    margin-top: auto; /* Empuja el checkbox hacia abajo */
+    display: flex;
+    justify-content: flex-end;
+    border: 1px solid var(--gray-medium);
+    border-radius: var(--border-radius);
+    padding: 0.5rem;
+    background-color: var(--gray-light);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.consejo-card-checkbox-wrapper .stCheckbox label {
+.stContainer > div > div > div > [data-testid="stVerticalBlock"] > div[data-testid="stCheckbox"] label {
     font-size: 0.9em;
     color: var(--text-gray);
     cursor: pointer;
@@ -562,10 +490,11 @@ p.titleSection {
     align-items: center;
     gap: 0.5rem;
     flex-direction: row-reverse;
-    justify-content: center; /* Centrado del label del checkbox */
+    justify-content: flex-end;
+    width: 100%;
 }
 
-.consejo-card-checkbox-wrapper .stCheckbox input[type="checkbox"] {
+.stContainer > div > div > div > [data-testid="stVerticalBlock"] > div[data-testid="stCheckbox"] input[type="checkbox"] {
     appearance: none;
     width: 1.2em;
     height: 1.2em;
@@ -578,12 +507,12 @@ p.titleSection {
     flex-shrink: 0;
 }
 
-.consejo-card-checkbox-wrapper .stCheckbox input[type="checkbox"]:checked {
+.stContainer > div > div > div > [data-testid="stVerticalBlock"] > div[data-testid="stCheckbox"] input[type="checkbox"]:checked {
     background-color: var(--accent-green-dark);
     border-color: var(--accent-green-dark);
 }
 
-.consejo-card-checkbox-wrapper .stCheckbox input[type="checkbox"]:checked::before {
+.stContainer > div > div > div > [data-testid="stVerticalBlock"] > div[data-testid="stCheckbox"] input[type="checkbox"]:checked::before {
     content: '✔';
     display: block;
     color: white;
@@ -596,12 +525,6 @@ p.titleSection {
     transform: translate(-50%, -50%);
 }
 
-.consejo-card-completed .consejo-card-checkbox-wrapper .stCheckbox input[type="checkbox"] {
-    border-color: var(--text-gray);
-    background-color: var(--text-gray);
-}
-/* --- FIN DE ESTILOS PARA TARJETAS DE CONSEJOS --- */
-
 .profile-info-card {
     background-color: var(--hover-green);
     border: 1px solid var(--accent-green);
@@ -613,7 +536,6 @@ p.titleSection {
     align-items: center;
     gap: 1rem;
     transition: transform var(--transition-speed-fast);
-    text-align: left; /* Texto alineado a la izquierda */
 }
 
 .profile-info-card:hover {
@@ -625,15 +547,10 @@ p.titleSection {
     font-size: 2em;
     color: var(--accent-green-dark);
     flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px; /* Ancho mínimo para el icono */
 }
 
 .profile-info-card-content {
     flex-grow: 1;
-    text-align: left; /* Texto alineado a la izquierda */
 }
 
 .profile-info-card-content strong {
@@ -641,13 +558,11 @@ p.titleSection {
     font-size: 1.1em;
     color: var(--text-black);
     margin-bottom: 0.2rem;
-    text-align: left; /* Texto alineado a la izquierda */
 }
 
 .profile-info-card-content span {
     font-size: 0.95em;
     color: var(--text-gray);
-    text-align: left; /* Texto alineado a la izquierda */
 }
 
 .st-emotion-cache-1kyxreq {
@@ -714,60 +629,3 @@ p.titleSection {
 .stTooltipHoverTarget:hover {
     color: #00b256;
 }
-
-/* --- NUEVOS ESTILOS PARA ÁRBOLES --- */
-
-/* Estilo para la caja de información de árboles */
-.trees-info-box {
-    background-color: var(--hover-green); /* Verde claro de fondo */
-    border: 1px solid var(--accent-green); /* Borde verde */
-    border-radius: var(--border-radius);
-    padding: 1.5rem;
-    margin: 2rem 0; /* Espacio arriba y abajo */
-    box-shadow: var(--box-shadow);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    animation: pulse 2s infinite; /* Animación de pulso */
-    text-align: left; /* Texto alineado a la izquierda por defecto */
-}
-
-@keyframes pulse {
-    0% { box-shadow: var(--box-shadow); }
-    50% { box-shadow: 0 0 15px rgba(0, 190, 92, 0.4); } /* Sombra verde brillante */
-    100% { box-shadow: var(--box-shadow); }
-}
-
-
-.trees-info-icon {
-    font-size: 2.5em; /* Tamaño del ícono */
-    color: var(--accent-green-dark); /* Color del ícono */
-    flex-shrink: 0; /* Evita que el ícono se encoja */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 50px; /* Ancho mínimo para el icono */
-}
-
-.trees-info-content {
-    flex-grow: 1; /* Hace que el contenido ocupe el espacio restante */
-    text-align: left; /* Texto alineado a la izquierda */
-}
-
-.trees-info-content strong {
-    display: block; /* Hace que el texto fuerte esté en una línea */
-    font-size: 1.2em; /* Tamaño del texto fuerte */
-    color: var(--text-black); /* Color del texto */
-    margin-bottom: 0.5rem; /* Espacio debajo del texto fuerte */
-    text-align: left; /* Texto fuerte alineado a la izquierda */
-}
-
-.trees-info-content p {
-    margin: 0; /* Elimina el margen por defecto del párrafo */
-    color: var(--text-gray); /* Color del párrafo */
-    font-size: 1em; /* Tamaño del párrafo */
-    text-align: left; /* Párrafo alineado a la izquierda */
-}
-
-
-/* --- FIN DE LOS NUEVOS ESTILOS --- */

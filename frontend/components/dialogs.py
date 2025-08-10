@@ -1,30 +1,90 @@
 """
 Componentes de UI para todos los diálogos modales de la aplicación.
 """
+from pdf2image import convert_from_path
+import os
 import streamlit as st
 import uuid
 from datetime import datetime
 from services import api_client
 from ocr import *
+import re 
+from PIL import Image
 
+#POPPLER_PATH = r"C:\Release-24.08.0-0\poppler-24.08.0\Library\bin"   
 
 
 def process_invoice_sync(file_path: str) -> dict:
-    """Versión síncrona para Streamlit"""
-    img = Image.open(file_path)
-    text = pytesseract.image_to_string(img)
+    """Procesa facturas SECHEEP conservando el formato original"""
+    try:
+        # Configuración de Poppler (asegúrate de que la ruta sea correcta)
+        POPPLER_PATH = r"C:\Release-24.08.0-0\poppler-24.08.0\Library\bin"
+        
+        # Cargar archivo (PDF o imagen)
+        if file_path.lower().endswith('.pdf'):
+            images = convert_from_path(
+                file_path,
+                first_page=1,
+                last_page=1,
+                dpi=300,
+                poppler_path=POPPLER_PATH
+            )
+            img = images[0] if images else None
+        else:
+            img = Image.open(file_path)
+        
+        if not img:
+            raise ValueError("No se pudo cargar el archivo")
+
+        # Preprocesamiento para OCR (sin eliminar espacios)
+        img = img.convert('L')  # Escala de grises
+        text = pytesseract.image_to_string(img, config='--psm 6')
+
+        # Debug: Mostrar texto exacto (conservando espacios y saltos de línea)
+        print("=== TEXTO ORIGINAL ===")
+        print(repr(text))  # Muestra caracteres ocultos como \n, \t, etc.
+
+        # ---- Extracción de CONSUMO (kWh) ----
+        consumo_match = re.search(
+            r"Kwh\s+(\d+\.\d{2})\s+0\.00\s+0\.00",  # Busca "Kwh 272.00 0.00 0.00"
+            text
+        )
+        consumo_kwh = float(consumo_match.group(1)) if consumo_match else 0.0
+
+        # ---- Extracción de TOTAL ($35,208.96) ----
+        # Busca "Total Vto al 01/09/25 1° Vto $ 35,208.96" (con espacios)
+        total_match = re.search(
+            r"1°\s+Vto\s*\$\s*([\d\.,]+)",
+            text
+        )
+        if total_match:
+            costo_total = float(total_match.group(1).replace(",", ""))
+        else:
+            costo_total = 0.0
+
+        # ---- Extracción de PERÍODO (06/2025) ----
+        periodo_match = re.search(r"Per[ií]odo:\s*(\d{2})/(\d{4})", text)
+        if periodo_match:
+            mes_num = int(periodo_match.group(1))
+            meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+                    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+            mes = meses[mes_num - 1]
+            anio = int(periodo_match.group(2))
+        else:
+            mes = datetime.now().strftime("%B")
+            anio = datetime.now().year
+
+        return {
+            "total_kwh": consumo_kwh,
+            "costo_total": costo_total,
+            "mes": mes,
+            "anio": anio,
+            "raw_text": text  # Texto original para diagnóstico
+        }
+
+    except Exception as e:
+        raise ValueError(f"Error al procesar: {str(e)}")
     
-    total_kwh = extract_kwh(text)
-    desglose = extract_items(text)
-
-    return {
-        "total_kwh": total_kwh,
-        "desglose": desglose,
-        "raw_text": text
-    }
-    
-
-
 @st.dialog("Subir Factura (OCR)")
 def dialogo_subir_ocr(estado_app):
     """Muestra el uploader de archivos OCR con acceso al estado"""
@@ -45,73 +105,55 @@ def dialogo_subir_ocr(estado_app):
         st.info("📌 Sube una imagen o PDF de tu factura para extraer la información automáticamente")
 
 def mostrar_formulario_ocr(uploaded_file, estado_app):
-    """Muestra el formulario de resultados del OCR con capacidad de guardado"""
     try:
         with st.spinner("Procesando factura..."):
-            # Guardar archivo temporalmente
-            suffix = os.path.splitext(uploaded_file.name)[1]
-            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            # Guardar archivo temporal
+            suffix = uploaded_file.name.split('.')[-1].lower()
+            with tempfile.NamedTemporaryFile(delete=False, suffix=f'.{suffix}') as tmp:
                 tmp.write(uploaded_file.getvalue())
                 tmp_path = tmp.name
             
-            # Procesar factura
-            resultado = process_invoice(tmp_path)
-            os.unlink(tmp_path)  # Eliminar archivo temporal
+            # Procesar
+            resultado = process_invoice_sync(tmp_path)
+            os.unlink(tmp_path)
 
-            # Mostrar resultados
-            st.success("✅ Factura procesada correctamente")
+            # --- Mostrar resultados ---
+            st.success("✅ Datos extraídos")
             
-            with st.expander("📄 Datos extraídos", expanded=True):
-                col1, col2 = st.columns(2)
-                col1.metric("Consumo kWh", resultado.get("total_kwh", 0))
-                
-                # Mostrar texto OCR
-                with col2:
-                    raw_text = resultado.get("raw_text", "No se extrajo texto")
-                    st.text_area("Texto reconocido", 
-                               value="\n".join(raw_text.split("\n")[:10]) + "..." if raw_text else "N/A",
-                               height=100)
-                
-                # Mostrar desglose
-                st.subheader("🧾 Desglose de conceptos")
-                for item in resultado.get("desglose", []):
-                    st.write(f"- **{item.get('concepto', 'Concepto')}**: ${item.get('importe', 0):,.2f}")
-
-            # Botón para guardar (usando la misma estructura que el manual)
+            cols = st.columns(2)
+            cols[0].metric("Consumo kWh", f"{resultado['total_kwh']:.2f}")
+            cols[1].metric("Total a pagar", f"${resultado['costo_total']:,.2f}")
+            
+            st.write(f"**Período:** {resultado['mes']} {resultado['anio']}")
+            
+            # Botón de guardado
             if st.button("💾 Guardar factura", type="primary"):
-                meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
-                        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
-                
                 payload = {
                     "id": str(uuid.uuid4()),
-                    "usuario_id": estado_app.usuario_actual_id,  # Usamos estado_app como en el manual
-                    "mes": meses[datetime.now().month - 1],  # Mes actual (podría extraerse del OCR)
-                    "anio": datetime.now().year,  # Año actual (podría extraerse del OCR)
-                    "consumo_kwh": float(resultado.get("total_kwh", 0)),
-                    "costo": sum(float(item.get("importe", 0)) for item in resultado.get("desglose", []))
+                    "usuario_id": estado_app.usuario_actual_id,
+                    "mes": resultado["mes"],
+                    "anio": resultado["anio"],
+                    "consumo_kwh": resultado["total_kwh"],
+                    "costo": resultado["costo_total"]
                 }
                 
                 try:
                     supabase = api_client.get_supabase_client()
                     res = supabase.table("facturas").insert(payload).execute()
                     if res.data:
-                        st.success("Factura guardada correctamente en la base de datos")
+                        st.success("¡Factura guardada en la base de datos!")
                         st.cache_data.clear()
-                        # Limpiar el file uploader
                         if 'ocr_uploader' in st.session_state:
                             del st.session_state.ocr_uploader
                         st.rerun()
-                    else:
-                        st.error("Error al guardar en la base de datos")
                 except Exception as e:
-                    st.error(f"Error de conexión con la base de datos: {str(e)}")
-                
+                    st.error(f"Error al guardar: {str(e)}")
+                    
     except Exception as e:
-        st.error(f"❌ Error al procesar la factura: {str(e)}")
-        # Limpiar archivo temporal si existe
+        st.error(f"❌ Error crítico: {str(e)}")
         if 'tmp_path' in locals() and os.path.exists(tmp_path):
             os.unlink(tmp_path)
-
+            
 @st.dialog("Configurar Electrodoméstico")
 def dialogo_configurar_electrodomestico(nombre_aparato, datos_catalogo, estado_app):
     st.markdown(f"<p class='dialog-title'>Añadir {nombre_aparato}</p>", unsafe_allow_html=True)
